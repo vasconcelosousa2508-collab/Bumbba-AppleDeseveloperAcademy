@@ -1,0 +1,29 @@
+# =========================
+# macOS
+# =========================
+.DS_Store
+.AppleDouble
+.LSOverride
+
+
+# =========================
+# Xcode
+# =========================
+build/
+DerivedData/
+
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## User settings
+xcuserdata/
+
+# Xcode workspace user data
+*.xcworkspace/xcuserdata/
+
+# =========================
+# Swift Package Manager
+# =========================
+.build/
+.swiftpm/
