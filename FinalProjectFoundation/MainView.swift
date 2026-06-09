@@ -59,12 +59,16 @@ struct MainView : View {
     }
 }
 
+//#Preview {
+//    MainView(
+////        .modelContainer( // ✅
+////                    for: [Album.self, Music.self],
+////                    inMemory: true,
+////                    sqliteDatabasePath: Bundle.main.path(forResource: "database", ofType: "sqlite")!
+////                )
+//    )
+//}
+
 #Preview {
-    MainView(
-//        .modelContainer( // ✅
-//                    for: [Album.self, Music.self],
-//                    inMemory: true,
-//                    sqliteDatabasePath: Bundle.main.path(forResource: "database", ofType: "sqlite")!
-//                )
-    )
+    MainView()
 }
