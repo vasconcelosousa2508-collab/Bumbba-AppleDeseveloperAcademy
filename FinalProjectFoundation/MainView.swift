@@ -10,20 +10,20 @@ struct MainView: View {
                 
                 Tab("Você", systemImage: "star") {
                     ZStack {
-                        Color.appFundo.ignoresSafeArea()
+                        Color.fundo.ignoresSafeArea()
                         Text("Perfil")
                     }
                 }
                 
                 Tab("Responsável", systemImage: "person.fill") {
                     ZStack {
-                        Color.appFundo.ignoresSafeArea()
+                        Color.fundo.ignoresSafeArea()
                         Text("Acesso Responsável")
                     }
                 }
             }
         }
-        .tint(.appRoxoTab)
+        .tint(.roxoTab)
     }
 }
 

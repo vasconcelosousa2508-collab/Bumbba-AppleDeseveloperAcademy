@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-// MARK: - Fontes Globais do App
 enum FontesDoApp {
     static let fonteX = "Fredoka"
     
@@ -32,16 +31,3 @@ enum FontesDoApp {
     }
 }
 
-// MARK: - Cores Globais do App
-// Estender a Color nativa garante sintaxe limpa: ex: Color.appFundo
-extension Color {
-    static let appFundo = Color("fundo")
-    static let appRoxoTab = Color("roxoTab")
-    static let appRoxoEscuroBtn = Color("roxoEscuroBnt")
-    static let appSombra = Color("sombra")
-}
-
-// Extensão complementar para UIColor (usada no sistema ou tint da TabView se necessário)
-//extension UIColor {
-//    static let appRoxoTab = UIColor(named: "roxoTab") ?? .purple
-//}

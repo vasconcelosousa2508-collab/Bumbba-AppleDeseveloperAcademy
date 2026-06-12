@@ -16,7 +16,7 @@ struct BiblioAgeView: View {
                 VStack(spacing: 30) {
                     Text("Selecione uma classificação")
                         .font(FontesDoApp.xBold(tamanho: 25))
-                        .foregroundColor(.appRoxoTab)
+                        .foregroundColor(.roxoTab)
                     
                     Picker("Selecione sua idade", selection: $idadeSelecionada) {
                         ForEach(idades, id: \.self) { idade in
@@ -31,7 +31,7 @@ struct BiblioAgeView: View {
                 Spacer()
                 
                 Button(action: {
-                    dismiss() // Faz a animação de voltar
+                    dismiss()
                 }) {
                     HStack(spacing: 10) {
                         Text("Continuar")
@@ -39,7 +39,7 @@ struct BiblioAgeView: View {
                     }
                     .foregroundColor(.white)
                     .frame(width: 320, height: 50)
-                    .background(Color.appRoxoTab) // Corrigido para as cores do seu DesignSystem
+                    .background(Color.roxoTab)
                     .cornerRadius(100)
                     .opacity(0.8)
                 }
@@ -47,10 +47,10 @@ struct BiblioAgeView: View {
             }
             .padding()
         }
-        // ✅ ADICIONE ISSO AQUI: Esconde a barra de abas quando esta tela aparecer
         .toolbar(.hidden, for: .tabBar)
     }
 }
+
 #Preview {
     BiblioAgeView()
 }

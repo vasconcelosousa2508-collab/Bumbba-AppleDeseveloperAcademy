@@ -17,11 +17,10 @@ struct BibliotecaView: View {
                         HStack(alignment: .firstTextBaseline) {
                             Text("Biblioteca")
                                 .font(FontesDoApp.xBold(tamanho: 32))
-                                .foregroundColor(.appRoxoTab)
+                                .foregroundColor(.roxoTab)
                             
                             Spacer()
                             
-                            // Correção: Substituído Button por NavigationLink
                             NavigationLink(destination: BiblioAgeView()) {
                                 HStack(spacing: 10) {
                                     Image(systemName: "chevron.up.chevron.down")
@@ -31,14 +30,13 @@ struct BibliotecaView: View {
                                 }
                                 .foregroundColor(.white)
                                 .frame(width: 100, height: 35)
-                                .background(Color.appRoxoEscuroBtn)
+                                .background(Color.roxoEscuroBnt)
                                 .cornerRadius(100)
                             }
                         }
                         .padding(.horizontal, 25)
                         .padding(.top, 45)
                         
-                        // Grid de Livros / Itens
                         LazyVGrid(columns: colunas, spacing: 20) {
                             ForEach(0..<5) { index in
                                 Button(action: {
@@ -48,7 +46,7 @@ struct BibliotecaView: View {
                                         .font(FontesDoApp.xBold(tamanho: 18))
                                         .foregroundColor(.white)
                                         .frame(width: 170, height: 170)
-                                        .background(Color.appSombra)
+                                        .background(Color.sombra)
                                         .cornerRadius(12)
                                 }
                             }
@@ -58,7 +56,9 @@ struct BibliotecaView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+            
         }
+        
     }
 }
 
