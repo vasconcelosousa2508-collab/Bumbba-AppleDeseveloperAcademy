@@ -1,40 +1,5 @@
 import SwiftUI
 
-//struct BibliotecaView : View {
-//    var body: some View {
-//        TabView {
-//            Group {
-//                Tab("Livros", systemImage: "square.stack.3d.down.right.fill") {
-//                    ZStack {
-//                        Color.fundo.ignoresSafeArea()
-//                        VStack {
-//                            Text("Biblioteca")
-//                        }
-//                    }
-//                }
-//                Tab("Você", systemImage: "star") {
-//                    ZStack {
-//                        Color.fundo.ignoresSafeArea()
-//                        VStack {
-//                            Text("Perfil")
-//                        }
-//                    }
-//                }
-//                Tab("Responsável", systemImage: "person.fill") {
-//                    ZStack {
-//                        Color.fundo.ignoresSafeArea()
-//                        VStack {
-//                            Text("Acesso Responsável")
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        .tint(.roxoTab)
-//    }
-//}
-
-
 struct BibliotecaView: View {
     let colunas = [
         GridItem(.flexible(), spacing: 16),
@@ -47,29 +12,52 @@ struct BibliotecaView: View {
                 Color.fundo.ignoresSafeArea()
                 
                 ScrollView {
-                    LazyVGrid(columns: colunas, spacing: 16) {
-                        ForEach(0..<5) { index in
-                            Button(action: {
-                                print("Botão \(index + 1) pressionado")
-                            }) {
-                                Text("Botão \(index + 1)")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                    // Mudamos de 180 para 170 para caber a margem na tela
-                                    .frame(width: 170, height: 170)
-                                    .background(Color.blue)
-                                    .cornerRadius(12)
+                    VStack(alignment: .leading, spacing: 40) {
+                        
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("Biblioteca")
+                                .font(FontesDoApp.xBold(tamanho: 32))
+                                .foregroundColor(.appRoxoTab)
+                            
+                            Spacer()
+                            
+                            // Correção: Substituído Button por NavigationLink
+                            NavigationLink(destination: BiblioAgeView()) {
+                                HStack(spacing: 10) {
+                                    Image(systemName: "chevron.up.chevron.down")
+                                        .font(.system(size: 12, weight: .bold))
+                                    Text("Idade")
+                                        .font(FontesDoApp.x(tamanho: 16))
+                                }
+                                .foregroundColor(.white)
+                                .frame(width: 100, height: 35)
+                                .background(Color.appRoxoEscuroBtn)
+                                .cornerRadius(100)
                             }
                         }
+                        .padding(.horizontal, 25)
+                        .padding(.top, 45)
+                        
+                        // Grid de Livros / Itens
+                        LazyVGrid(columns: colunas, spacing: 20) {
+                            ForEach(0..<5) { index in
+                                Button(action: {
+                                    print("Botão \(index) pressionado")
+                                }) {
+                                    Text("")
+                                        .font(FontesDoApp.xBold(tamanho: 18))
+                                        .foregroundColor(.white)
+                                        .frame(width: 170, height: 170)
+                                        .background(Color.appSombra)
+                                        .cornerRadius(12)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
                     }
-                    // Essa margem afasta a grade inteira das bordas da tela
-                    .padding(.horizontal, 16)
-                    .padding(.top, 10)
-
-
                 }
             }
-            .navigationTitle("Biblioteca")
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 }
