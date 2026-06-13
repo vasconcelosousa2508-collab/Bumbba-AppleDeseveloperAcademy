@@ -3,8 +3,10 @@ import SwiftUI
 struct BiblioAgeView: View {
     @Environment(\.dismiss) var dismiss
     
-    let idades: [String] = ["4 a 5 ", "6 a 7", "8 a 10"]
-    @State private var idadeSelecionada = "4 a 5 "
+    let idades: [String] = ["4 a 5", "6 a 7", "8 a 10"]
+    
+    // Altere de @State para @Binding e remova a inicialização direta
+    @Binding var idadeSelecionada: String
     
     var body: some View {
         ZStack {
@@ -21,7 +23,6 @@ struct BiblioAgeView: View {
                     Picker("Selecione sua idade", selection: $idadeSelecionada) {
                         ForEach(idades, id: \.self) { idade in
                             Text(idade).tag(idade)
-                                .font(.system(size: 20))
                         }
                     }
                     .pickerStyle(.wheel)
@@ -51,6 +52,7 @@ struct BiblioAgeView: View {
     }
 }
 
+// Atualize o Preview passando um valor constante simulado
 #Preview {
-    BiblioAgeView()
+    BiblioAgeView(idadeSelecionada: .constant("4 a 5"))
 }
