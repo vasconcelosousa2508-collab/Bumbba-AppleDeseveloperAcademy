@@ -1,6 +1,10 @@
 import SwiftUI
+import SwiftData
+import SwiftDataSQLite
 
 struct BibliotecaView: View {
+    @Query var livros: [Livro]
+
     let colunas = [
         GridItem(.flexible(), spacing: 16),
         GridItem(.flexible(), spacing: 16)
@@ -16,6 +20,7 @@ struct BibliotecaView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 40) {
                         
+                        // MARK: - Cabeçalho
                         HStack(alignment: .firstTextBaseline) {
                             Text("Biblioteca")
                                 .font(FontesDoApp.xBold(tamanho: 32))
@@ -23,6 +28,7 @@ struct BibliotecaView: View {
                             
                             Spacer()
                             
+                            // MODIFICADO: Substituído o Button por um NavigationLink direcionando para a BiblioAgeView
                             NavigationLink(destination: BiblioAgeView(idadeSelecionada: $idadeSelecionada)) {
                                 HStack(spacing: 10) {
                                     Image(systemName: "chevron.up.chevron.down")
@@ -39,17 +45,30 @@ struct BibliotecaView: View {
                         .padding(.horizontal, 25)
                         .padding(.top, 45)
                         
+                        // MARK: - Grade de Livros
                         LazyVGrid(columns: colunas, spacing: 20) {
-                            ForEach(DadosManuais.listaLivros) { livro in
-                                NavigationLink(destination: DetalheLivroView(livro: livro, faixaEtaria: idadeSelecionada)) {
+                            ForEach(livros) { livro in
+                                Button(action: {
+                                    print("Livro tocado: \(livro.titulo)")
+                                }) {
                                     VStack(spacing: 12) {
+                                        
                                         RoundedRectangle(cornerRadius: 12)
                                             .fill(Color.sombra)
                                             .frame(width: 170, height: 170)
                                             .overlay(
-                                                Image(systemName: "book.closed.fill")
-                                                    .font(.system(size: 38))
-                                                    .foregroundColor(.roxoTab.opacity(0.6))
+                                                ZStack {
+                                                    Image(systemName: "book.closed.fill")
+                                                        .font(.system(size: 38))
+                                                        .foregroundColor(.roxoTab.opacity(0.6))
+                                                    
+                                                    Image(livro.capa)
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width: 170, height: 170)
+                                                        .cornerRadius(12)
+                                                        .clipped()
+                                                }
                                             )
                                         
                                         Text(livro.titulo)
@@ -75,6 +94,12 @@ struct BibliotecaView: View {
     }
 }
 
+// MARK: - Preview
 #Preview {
     BibliotecaView()
+        .modelContainer(
+            for: [Livro.self],
+            inMemory: true,
+            sqliteDatabasePath: Bundle.main.path(forResource: "db", ofType: "sqlite")!
+        )
 }

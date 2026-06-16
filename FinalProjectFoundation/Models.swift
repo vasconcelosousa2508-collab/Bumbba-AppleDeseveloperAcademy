@@ -1,5 +1,28 @@
-import Foundation
 import SwiftUI
+import SwiftData
+import SwiftDataSQLite
+
+
+@Model
+@SQLiteTable("Livro")
+class Livro: Identifiable {
+    @SQLiteColumn("id_livro")
+    var id: Int
+    var titulo: String
+    var capa: String
+    init(id: Int, titulo: String, capa: String) {
+        self.id = id
+        self.titulo = titulo
+        self.capa = capa
+    }
+}
+
+
+
+
+
+
+
 
 // 1. Tipos de atividades disponíveis
 enum TipoAtividade {
@@ -23,7 +46,7 @@ struct ElementoHistoria: Identifiable {
 }
 
 // 4. Modelo do Livro
-struct Livro: Identifiable {
+struct Livro2: Identifiable {
     let id: Int
     let titulo: String
     let imagemCapa: String
@@ -32,8 +55,8 @@ struct Livro: Identifiable {
 
 // 5. Dados manuais com as estrofes e suas respectivas atividades
 enum DadosManuais {
-    static let listaLivros: [Livro] = [
-        Livro(
+    static let listaLivros: [Livro2] = [
+        Livro2(
             id: 1,
             titulo: "Se Essa Rua Fosse Minha",
             imagemCapa: "capa_rua",

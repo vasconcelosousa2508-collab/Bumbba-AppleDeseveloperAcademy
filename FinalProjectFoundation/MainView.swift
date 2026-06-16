@@ -1,4 +1,6 @@
 import SwiftUI
+import SwiftData
+import SwiftDataSQLite
 
 struct MainView: View {
     var body: some View {
@@ -10,8 +12,7 @@ struct MainView: View {
                 
                 Tab("Você", systemImage: "star") {
                     ZStack {
-                        Color.fundo.ignoresSafeArea()
-                        Text("Perfil")
+                        PerfilView()
                     }
                 }
                 
@@ -29,4 +30,9 @@ struct MainView: View {
 
 #Preview {
     MainView()
+        .modelContainer(
+            for: [Livro.self],
+            inMemory: true,
+            sqliteDatabasePath: Bundle.main.path(forResource: "db", ofType: "sqlite")!
+        )
 }

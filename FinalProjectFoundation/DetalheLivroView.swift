@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct DetalheLivroView: View {
-    let livro: Livro
+    let livro: Livro2
     let faixaEtaria: String
     
     // Para permitir voltar à tela anterior quando o botão "Concluir História" for pressionado

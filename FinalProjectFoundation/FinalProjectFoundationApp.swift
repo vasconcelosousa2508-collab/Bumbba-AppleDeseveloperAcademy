@@ -15,3 +15,18 @@ struct FinalProjectFoundationApp: App {
         }
     }
 }
+
+//import SwiftUI
+//import SwiftData
+//
+//@main
+//struct SeuApp: App {
+//    var body: some Scene {
+//        WindowGroup {
+//            BibliotecaView()
+//        }
+//        // Isso inicializa o arquivo do banco de dados SQLite para o modelo Livro
+//        .modelContainer(for: Livro.self)
+//    }
+//}
+//
