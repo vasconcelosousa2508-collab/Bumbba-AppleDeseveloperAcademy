@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><sqlb_project><db path="db.sqlite" readonly="0" foreign_keys="1" case_sensitive_like="0" temp_store="0" wal_autocheckpoint="1000" synchronous="2"/><attached/><window><main_tabs open="structure browser pragmas query" current="1"/></window><tab_structure><column_width id="0" width="300"/><column_width id="1" width="0"/><column_width id="2" width="100"/><column_width id="3" width="1806"/><column_width id="4" width="0"/><expanded_item id="0" parent="1"/><expanded_item id="1" parent="1"/><expanded_item id="2" parent="1"/><expanded_item id="3" parent="1"/></tab_structure><tab_browse><table title="Livro" custom_title="0" dock_id="2" table="4,5:mainLivro"/><dock_state state="000000ff00000000fd0000000100000002000003560000032bfc0100000002fb000000160064006f0063006b00420072006f00770073006500310100000000000003560000000000000000fb000000160064006f0063006b00420072006f00770073006500320100000000000003560000010100ffffff000002a30000000000000004000000040000000800000008fc00000000"/><default_encoding codec=""/><browse_table_settings><table schema="main" name="Atividade" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="88"/><column index="2" value="111"/><column index="3" value="293"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Conteudo_Linha" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="60"/><column index="2" value="73"/><column index="3" value="109"/><column index="4" value="72"/><column index="5" value="90"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Livro" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="57"/><column index="2" value="125"/><column index="3" value="56"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Livro_Versao_Nivel" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="72"/><column index="2" value="58"/><column index="3" value="85"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="Trecho" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="71"/><column index="2" value="300"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table><table schema="main" name="sqlite_sequence" show_row_id="0" encoding="" plot_x_axis="" unlock_view_pk="_rowid_" freeze_columns="0"><sort/><column_widths><column index="1" value="45"/><column index="2" value="32"/></column_widths><filter_values/><conditional_formats/><row_id_formats/><display_formats/><hidden_columns/><plot_y_axes/><global_filter/></table></browse_table_settings></tab_browse><tab_sql><sql name="SQL 1*">-- 1. DELETAR AS TABELAS QUE VAMOS REESTRUTURAR PARA EVITAR ERROS
+DROP TABLE IF EXISTS Linha;
+DROP TABLE IF EXISTS Conteudo_Linha;
+DROP TABLE IF EXISTS Atividade;
+DROP TABLE IF EXISTS Livro_Versao_Nivel;
+
+-- 2. CRIAR AS TABELAS QUE ESTAVAM FALTANDO NO SEU BANCO
+-- Criando a tabela de versões por faixa etária
+CREATE TABLE Livro_Versao_Nivel (
+    id_versao INTEGER PRIMARY KEY,
+    id_livro INTEGER,
+    faixa_etaria TEXT,
+    FOREIGN KEY(id_livro) REFERENCES Livro(id_livro)
+);
+
+-- Criando a tabela de atividades
+CREATE TABLE Atividade (
+    id_atividade INTEGER PRIMARY KEY AUTOINCREMENT,
+    categoria TEXT,
+    instrucao TEXT
+);
+
+-- Criando a nova tabela de junção (Conteudo_Linha) que junta trechos e atividades por versão
+CREATE TABLE Conteudo_Linha (
+    id_linha INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_versao INTEGER,
+    ordem_posicao INTEGER,
+    id_trecho INTEGER,
+    id_atividade INTEGER,
+    FOREIGN KEY(id_versao) REFERENCES Livro_Versao_Nivel(id_versao),
+    FOREIGN KEY(id_trecho) REFERENCES Trecho(id_trecho),
+    FOREIGN KEY(id_atividade) REFERENCES Atividade(id_atividade)
+);
+
+-- 3. AJUSTAR OS DADOS DO LIVRO EXISTENTE
+-- Garantindo que o Livro 1 tenha as colunas nomeadas exatamente como o Swift espera
+DELETE FROM Livro;
+INSERT INTO Livro (id_livro, titulo, capa) 
+VALUES (1, 'Se Essa Rua Fosse Minha', 'capa_rua');
+
+-- 4. POVOAR AS VERSÕES DE IDADE (IDs 101, 102 e 103 para bater com o DatabaseManager)
+INSERT INTO Livro_Versao_Nivel (id_versao, id_livro, faixa_etaria) VALUES 
+(101, 1, '4 a 5'),
+(102, 1, '6 a 7'),
+(103, 1, '8 a 10');
+
+-- 5. REORGANIZAR E ATUALIZAR OS SEUS TRECHOS DE TEXTO
+DELETE FROM Trecho;
+INSERT INTO Trecho (id_trecho, texto) VALUES 
+(1, 'Se essa rua, se essa rua fosse minha, eu mandava, eu mandava ladrilhar. Com pedrinhas, com pedrinhas de brilhantes, para o meu, para o meu amor passar.'),
+(2, 'Nesta rua, nesta rua tem um bosque, que se chama, que se chama solidão. Dentro dele, dentro dele mora um anjo, que roubou, que roubou meu coração.'),
+(3, 'Nessa rua tem um bosque muito bonito. Dentro dele mora um anjo bom. O anjo guarda pedrinhas brilhantes que iluminam todo o caminho.'),
+(4, 'Se essa rua fosse minha, eu mandava ela ser ladrilhada com pedrinhas de brilhantes.'),
+(5, 'Tudo isso seria apenas para ver o meu grande amor passar e sorrir.');
+
+-- 6. POVOAR AS COMPONENTES DE ATIVIDADES
+INSERT INTO Atividade (id_atividade, categoria, instrucao) VALUES 
+(1, 'seguirPontilhado', 'Siga o caminho pontilhado com o dedo para ladrilhar a rua:'),
+(2, 'multiplaEscolha', 'Qual é o nome do bosque que fica na rua?'),
+(3, 'desembaralharFrase', 'Organize as palavras para formar a frase:');
+
+-- 7. DEFINIR O FLUXO DA HISTÓRIA INTERCALADA (CONTEUDO_LINHA)
+
+-- == Fluxo para 4 a 5 anos (id_versao: 101) ==
+INSERT INTO Conteudo_Linha (id_versao, ordem_posicao, id_trecho, id_atividade) VALUES 
+(101, 1, 3, NULL), -- Texto explicativo do bosque
+(101, 2, NULL, 1); -- Atividade pontilhado
+
+-- == Fluxo para 6 a 7 anos (id_versao: 102) ==
+INSERT INTO Conteudo_Linha (id_versao, ordem_posicao, id_trecho, id_atividade) VALUES 
+(102, 1, 1, NULL), -- Primeira estrofe
+(102, 2, NULL, 2), -- Atividade Múltipla escolha
+(102, 3, 2, NULL), -- Segunda estrofe
+(102, 4, NULL, 3); -- Atividade Desembaralhar Frase
+
+-- == Fluxo para 8 a 10 anos (id_versao: 103) ==
+INSERT INTO Conteudo_Linha (id_versao, ordem_posicao, id_trecho, id_atividade) VALUES 
+(103, 1, 4, NULL), -- Texto adaptado mais avançado
+(103, 2, 5, NULL); -- Conclusão poética
+
+
+-- =================================================================
+-- 1. CADASTRO DO NOVO LIVRO (id_livro = 2)
+-- =================================================================
+INSERT INTO Livro (id_livro, titulo, capa) 
+VALUES (2, 'A Lenda do Boi Bumbá', 'capa_boibumba');
+
+-- =================================================================
+-- 2. CADASTRO DAS VERSÕES/NÍVEIS PARA O NOVO LIVRO
+-- Usando os IDs de versão 201, 202 e 203 para não chocar com o livro 1
+-- =================================================================
+INSERT INTO Livro_Versao_Nivel (id_versao, id_livro, faixa_etaria) VALUES 
+(201, 2, '4 a 5'),
+(202, 2, '6 a 7'),
+(203, 2, '8 a 10');
+
+-- =================================================================
+-- 3. CADASTRO DOS TRECHOS DA HISTÓRIA (Começando no ID 50)
+-- =================================================================
+INSERT INTO Trecho (id_trecho, texto) VALUES 
+(50, 'Em uma linda fazenda, vivia um boi muito inteligente e querido por todos. Ele conseguia dançar e fazer piruetas que alegravam a vila inteira!'),
+(51, 'Certa noite, o boi sumiu misteriosamente da fazenda. Todos os moradores ficaram muito preocupados e decidiram se unir para procurá-lo na floresta.'),
+(52, 'Pai Francisco e Catirina queriam muito fazer uma grande festa, mas precisavam da ajuda do pajé para trazer a alegria do boi de volta.'),
+(53, 'Com tambores e danças coloridas, o Pajé realizou um feitiço poderoso da floresta, fazendo o Boi Bumbá acordar e dançar ainda mais bonito do que antes!'),
+(54, 'A tradição do bumba meu boi celebra a vida, o ritmo e a união das comunidades com fantasias brilhantes e muita música no Norte e Nordeste do Brasil.');
+
+-- =================================================================
+-- 4. CADASTRO DE NOVAS ATIVIDADES ADAPTADAS (Começando no ID 10)
+-- =================================================================
+INSERT INTO Atividade (id_atividade, categoria, instrucao) VALUES 
+(10, 'seguirPontilhado', 'Ajude a guiar o Pajé pela floresta seguindo o caminho pontilhado:'),
+(11, 'multiplaEscolha', 'Quem ajudou a trazer a alegria do Boi Bumbá de volta na lenda?'),
+(12, 'desembaralharFrase', 'Organize o ritmo da festa arrumando as palavras:');
+
+-- =================================================================
+-- 5. INTERCALANDO O CONTEÚDO (Conteudo_Linha)
+-- =================================================================
+
+-- == Fluxo para Criancinhas: 4 a 5 anos (id_versao: 201) ==
+-- Texto lúdico + Atividade motora de pontilhado
+INSERT INTO Conteudo_Linha (id_versao, ordem_posicao, id_trecho, id_atividade) VALUES 
+(201, 1, 50, NULL),
+(201, 2, NULL, 10);
+
+-- == Fluxo para Alfabetização: 6 a 7 anos (id_versao: 202) ==
+-- Introdução do mistério + Pergunta interpretativa + Resolução feliz
+INSERT INTO Conteudo_Linha (id_versao, ordem_posicao, id_trecho, id_atividade) VALUES 
+(202, 1, 51, NULL),
+(202, 2, NULL, 11),
+(202, 3, 53, NULL);
+
+-- == Fluxo para Maiores: 8 a 10 anos (id_versao: 203) ==
+-- Texto completo de contexto histórico/cultural + Desafio gramatical
+INSERT INTO Conteudo_Linha (id_versao, ordem_posicao, id_trecho, id_atividade) VALUES 
+(203, 1, 52, NULL),
+(203, 2, 54, NULL),
+(203, 3, NULL, 12);</sql><current_tab id="0"/></tab_sql></sqlb_project>

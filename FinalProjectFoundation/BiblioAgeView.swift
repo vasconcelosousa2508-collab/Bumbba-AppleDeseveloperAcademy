@@ -35,7 +35,7 @@ struct BiblioAgeView: View {
                     dismiss()
                 }) {
                     HStack(spacing: 10) {
-                        Text("Continuar")
+                        Text("Confirmar")
                             .font(FontesDoApp.x(tamanho: 16))
                     }
                     .foregroundColor(.white)

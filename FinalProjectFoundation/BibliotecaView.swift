@@ -40,9 +40,7 @@ struct BibliotecaView: View {
                         .padding(.top, 45)
                         
                         LazyVGrid(columns: colunas, spacing: 20) {
-                            // Puxando direto dos dados manuais configurados no Models
                             ForEach(DadosManuais.listaLivros) { livro in
-                                // Enviando o livro E a idade selecionada para o Detalhe
                                 NavigationLink(destination: DetalheLivroView(livro: livro, faixaEtaria: idadeSelecionada)) {
                                     VStack(spacing: 12) {
                                         RoundedRectangle(cornerRadius: 12)

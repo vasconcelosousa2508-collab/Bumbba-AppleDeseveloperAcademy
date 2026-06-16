@@ -4,76 +4,93 @@ struct DetalheLivroView: View {
     let livro: Livro
     let faixaEtaria: String
     
-    // Propriedade computada para pegar as frases certas com base na idade
-    var paragrafosDaHistoria: [String] {
-        livro.textosPorIdade[faixaEtaria] ?? ["Nenhum texto cadastrado para esta idade."]
+    // Para permitir voltar à tela anterior quando o botão "Concluir História" for pressionado
+    @Environment(\.dismiss) var dismiss
+    
+    // Obtém a sequência misturada de textos e atividades para a idade selecionada
+    var elementosDoLivro: [ElementoHistoria] {
+        livro.conteudoPorIdade[faixaEtaria] ?? []
     }
     
     var body: some View {
         ZStack {
             Color.fundo.ignoresSafeArea()
             
-            ScrollView {
-                VStack(alignment: .leading, spacing: 35) {
-                    
-                    // Cabeçalho com Título e a Indicação da Idade atual
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(livro.titulo)
-                            .font(FontesDoApp.xBold(tamanho: 28))
-                            .foregroundColor(.roxoTab)
+            VStack(spacing: 0) {
+                
+                // APENAS ESTE BLOCO ROLA NA TELA
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 30) {
                         
-                        Text("Modo de leitura: \(faixaEtaria) anos")
-                            .font(FontesDoApp.x(tamanho: 14))
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    
-                    // Lista Dinâmica Manual (Varre os textos do nível escolhido)
-                    ForEach(paragrafosDaHistoria, id: \.self) { paragrafo in
-                        Text(paragrafo)
-                            .font(FontesDoApp.x(tamanho: 20))
-                            .foregroundColor(.primary)
-                            .lineSpacing(8)
-                            .padding(.horizontal, 20)
-                    }
-                    
-                    // Elemento estático visual de atividade para compor o layout
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("🎯 Atividade Integrada")
-                                .font(FontesDoApp.xBold(tamanho: 14))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.roxoEscuroBnt)
-                                .cornerRadius(8)
-                            Spacer()
+                        Spacer().frame(height: 10) // Pequeno respiro inicial antes da história
+                        
+                        // Loop Principal da História Intercalada (Corrigido com id)
+                        ForEach(elementosDoLivro, id: \.id) { elemento in
+                            
+                            // 1. Se for texto da estrofe
+                            if let textoEstrofe = elemento.texto {
+                                Text(textoEstrofe)
+                                    .font(FontesDoApp.x(tamanho: 22))
+                                    .foregroundColor(.primary)
+                                    .lineSpacing(10)
+                                    .padding(.horizontal, 25)
+                            }
+                            
+                            // 2. Se for uma Atividade Intercalada
+                            if let atividade = elemento.atividade {
+                                switch atividade.tipo {
+                                case .seguirPontilhado:
+                                    AtividadePontilhadoView()
+                                    
+                                case .multiplaEscolha(let pergunta, let opcoes, let resposta):
+                                    AtividadeMultiplaEscolhaView(pergunta: pergunta, opcoes: opcoes, respostaCorreta: resposta)
+                                    
+                                case .desembaralharLetras(let palavra, let letras):
+                                    AtividadeLetrasView(palavraCerta: palavra, letrasEmbaralhadas: letras)
+                                    
+                                case .desembaralharFrase(let frase, let palavras):
+                                    AtividadeFraseView(fraseCerta: frase, palavrasEmbaralhadas: palavras)
+                                }
+                            }
                         }
                         
-                        Text("O que você achou dessa parte da história? Faça um lindo desenho!")
-                            .font(FontesDoApp.xBold(tamanho: 18))
-                            .foregroundColor(.black)
+                        Spacer().frame(height: 20)
                         
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(Color.gray.opacity(0.4), style: StrokeStyle(lineWidth: 2, dash: [6]))
-                            .frame(height: 150)
-                            .overlay(
-                                Text("[ Área de desenho da criança ]")
-                                    .font(FontesDoApp.x(tamanho: 14))
-                                    .foregroundColor(.gray)
-                            )
+                        // BOTÃO DE CONCLUIR HISTÓRIA (Ao final da rolagem, estilo BiblioAgeView)
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            HStack(spacing: 10) {
+                                Text("Concluir História")
+                                    .font(FontesDoApp.x(tamanho: 16))
+                            }
+                            .foregroundColor(.white)
+                            .frame(width: 320, height: 50)
+                            .background(Color.roxoTab)
+                            .cornerRadius(100)
+                            .opacity(0.8)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center) // Centraliza o botão na tela
+                        .padding(.bottom, 30)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    
                 }
+            }
+        }
+        // Define o modo inline para o título ficar centralizado na barra ao lado da seta padrão
+        .navigationBarTitleDisplayMode(.inline)
+        // Injeta o seu estilo customizado de texto exatamente na posição do título nativo
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(livro.titulo)
+                    .font(FontesDoApp.xBold(tamanho: 20)) // Fonte Fredoka Bold
+                    .foregroundColor(.roxoTab)          // Cor rosa/roxo do seu app
             }
         }
     }
 }
 
 #Preview {
-    // Preview mockado passando o primeiro livro na idade padrão
-    DetalheLivroView(livro: DadosManuais.listaLivros[0], faixaEtaria: "4 a 5")
+    NavigationStack {
+        DetalheLivroView(livro: DadosManuais.listaLivros[0], faixaEtaria: "6 a 7")
+    }
 }
