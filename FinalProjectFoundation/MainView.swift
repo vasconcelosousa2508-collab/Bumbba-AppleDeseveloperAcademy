@@ -31,7 +31,7 @@ struct MainView: View {
 #Preview {
     MainView()
         .modelContainer(
-            for: [Livro.self],
+            for: [Livro.self, Crianca.self , Responsavel.self, Avatar.self],
             inMemory: true,
             sqliteDatabasePath: Bundle.main.path(forResource: "db", ofType: "sqlite")!
         )

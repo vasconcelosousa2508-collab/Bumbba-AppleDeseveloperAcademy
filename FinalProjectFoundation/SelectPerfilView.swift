@@ -6,10 +6,14 @@
 //
 
 import SwiftUI
+import SwiftData
+import SwiftDataSQLite
 
 struct SelectPerfilView: View {
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        ZStack {
+            Color.fundo.ignoresSafeArea()
+        }
     }
 }
 

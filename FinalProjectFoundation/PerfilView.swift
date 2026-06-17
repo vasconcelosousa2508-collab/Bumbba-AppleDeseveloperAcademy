@@ -1,16 +1,28 @@
-//
-//  perfil.swift
-//  FinalProjectFoundation
-//
-//  Created by Found on 16/06/26.
-//
-
-
-
 import SwiftUI
+import SwiftData
+import SwiftDataSQLite
 
 struct PerfilView: View {
+    @Query var criancas: [Crianca]
+    @Query var avatares: [Avatar]
+    
+    @State private var avatarSelecionado: Avatar?
+    
     let historiasConcluidas = 6
+    
+    var criancaAtual: Crianca? {
+        criancas.first
+    }
+    
+    var imagemAvatarAtual: UIImage? {
+        guard let idAvatarDaCrianca = criancaAtual?.idAvatar else { return nil }
+        let avatarEncontrado = avatares.first(where: { $0.id == idAvatarDaCrianca })
+        
+        if let data = avatarEncontrado?.imagem {
+            return UIImage(data: data)
+        }
+        return nil
+    }
     
     var body: some View {
         let colunas = [
@@ -22,38 +34,42 @@ struct PerfilView: View {
             Color.fundo.ignoresSafeArea()
             
             ScrollView {
-                // Criado este VStack interno para gerenciar os espaçamentos de toda a página
                 VStack(spacing: 0) {
                     
-                    // FOTO DE PERFIL
-                    Circle()
-                        .fill(Color.sombra)
-                        .frame(width: 200, height: 200)
-                        .overlay(
-                            Button(action: {
-                                print("Botão no nordeste pressionado!")
-                            }) {
-                                Circle()
-                                    .fill(Color.azulClaro)
-                                    .frame(width: 60, height: 60)
-                                    .opacity(0.8)
-                                    .overlay(
-                                        Text("\(Image(systemName: "pencil.circle"))")
-                                            .font(.system(size: 60))
-                                            .bold()
-                                            .foregroundColor(.fundo)
-                                    )
-                            }
+                    ZStack {
+                        if let uiImage = imagemAvatarAtual {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 200, height: 200)
+                                .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(Color.sombra)
+                                .frame(width: 200, height: 200)
+                        }
+                    }
+                    .overlay(
+                        NavigationLink(destination: SelectAvatarView()) {
+                            Circle()
+                                .fill(Color.azulClaro)
+                                .frame(width: 60, height: 60)
+                                .opacity(0.8)
+                                .overlay(
+                                    Image(systemName: "pencil.circle")
+                                        .resizable()
+                                        .frame(width: 60, height: 60)
+                                        .foregroundColor(.white)
+                                )
+                        }
                             .offset(x: 71, y: -71)
-                        )
+                    )
                     
-                    // NOME DO PERFIL
-                    Text("Nome da criança")
+                    Text(criancaAtual?.nome ?? "Sem Nome")
                         .font(FontesDoApp.xBold(tamanho: 32))
                         .foregroundColor(.roxoTab)
-                        .padding(.top, 10) // Ajustado de bottom para top para organizar o fluxo
+                        .padding(.top, 25)
                     
-                    // LINHA DIVISÓRIA E CONTADOR
                     VStack(spacing: 8) {
                         Divider()
                             .background(Color.roxoTab.opacity(0.2))
@@ -70,7 +86,6 @@ struct PerfilView: View {
                     .padding(.vertical, 25)
                     .padding(.top, 40)
 
-                    
                     // GRID DE LIVROS
                     LazyVGrid(columns: colunas, spacing: 8) {
                         ForEach(1...6, id: \.self) { livro in
@@ -99,5 +114,12 @@ struct PerfilView: View {
 }
 
 #Preview {
-    PerfilView()
+    NavigationStack {
+        PerfilView()
+            .modelContainer(
+                for: [Crianca.self, Avatar.self],
+                inMemory: true,
+                sqliteDatabasePath: Bundle.main.path(forResource: "db", ofType: "sqlite")!
+            )
+    }
 }

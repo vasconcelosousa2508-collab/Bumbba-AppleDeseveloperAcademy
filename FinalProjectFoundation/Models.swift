@@ -9,14 +9,69 @@ class Livro: Identifiable {
     @SQLiteColumn("id_livro")
     var id: Int
     var titulo: String
-    var capa: String
-    init(id: Int, titulo: String, capa: String) {
+    
+    var capa: Data
+    
+    init(id: Int, titulo: String, capa: Data) {
         self.id = id
         self.titulo = titulo
         self.capa = capa
     }
 }
 
+
+@Model
+@SQLiteTable("Responsavel")
+class Responsavel: Identifiable {
+    @SQLiteColumn("id_responsavel")
+    var id: Int
+    
+    var senha: String
+
+    init(id: Int, senha: String) {
+        self.id = id
+        self.senha = senha
+    }
+}
+
+@Model
+@SQLiteTable("Crianca")
+class Crianca: Identifiable {
+    @SQLiteColumn("id_crianca")
+    var id: Int
+    
+    var nome: String
+    var idade: Int
+    
+    @SQLiteColumn("id_responsavel")
+    var idResponsavel: Int
+    
+    // Mapeado perfeitamente para a coluna do seu log
+    @SQLiteColumn("avatar")
+    var idAvatar: String
+
+    init(id: Int, nome: String, idade: Int, idResponsavel: Int, idAvatar: String) {
+        self.id = id
+        self.nome = nome
+        self.idade = idade
+        self.idResponsavel = idResponsavel
+        self.idAvatar = idAvatar
+    }
+}
+
+@Model
+@SQLiteTable("Avatar")
+class Avatar: Identifiable {
+    @SQLiteColumn("id_avatar")
+    var id: String
+    
+    var imagem: Data
+
+    init(id: String, imagem: Data) {
+        self.id = id
+        self.imagem = imagem
+    }
+}
 
 
 

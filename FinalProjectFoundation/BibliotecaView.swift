@@ -62,12 +62,19 @@ struct BibliotecaView: View {
                                                         .font(.system(size: 38))
                                                         .foregroundColor(.roxoTab.opacity(0.6))
                                                     
-                                                    Image(livro.capa)
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                        .frame(width: 170, height: 170)
-                                                        .cornerRadius(12)
-                                                        .clipped()
+                                                    if let uiImage = UIImage(data: livro.capa) {
+                                                        Image(uiImage: uiImage)
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                            .frame(width: 170, height: 170)
+                                                            .cornerRadius(12)
+                                                            .clipped()
+                                                    } else {
+                                                        // Caso a imagem falhe ou o banco retorne nulo/vazio, mostra um ícone padrão
+                                                        Image(systemName: "book.closed.fill")
+                                                            .font(.system(size: 38))
+                                                            .foregroundColor(.roxoTab.opacity(0.6))
+                                                    }
                                                 }
                                             )
                                         
@@ -103,6 +110,3 @@ struct BibliotecaView: View {
             sqliteDatabasePath: Bundle.main.path(forResource: "db", ofType: "sqlite")!
         )
 }
-
-
-//teste de pull
