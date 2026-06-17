@@ -19,10 +19,13 @@ class Livro: Identifiable {
     }
 }
 
+import Foundation
+import SwiftData
+import SwiftDataSQLite
+
 @Model
-@SQLiteTable("Livro_Versao_Linha")
-class LivroVersaoLinha: Identifiable {
-    // Como o SwiftData exige uma Primary Key conceitual, mapeamos o id_versao como a propriedade id principal
+@SQLiteTable("Livro_Versao_Nivel") // CORRIGIDO PARA O NOME REAL DO BANCO
+class LivroVersaoNivel: Identifiable {
     @SQLiteColumn("id_versao")
     var id: Int
     
@@ -30,9 +33,9 @@ class LivroVersaoLinha: Identifiable {
     var idLivro: Int
     
     @SQLiteColumn("faixa_etaria")
-    var faixaEtaria: String // Se no seu banco for número (ex: 4, 6), mude para Int
+    var faixaEtaria: String
     
-    var concluido: Int // Bancos SQLite costumam salvar booleanos como 0 (falso) ou 1 (verdadeiro)
+    var concluido: Int
 
     init(id: Int, idLivro: Int, faixaEtaria: String, concluido: Int) {
         self.id = id
