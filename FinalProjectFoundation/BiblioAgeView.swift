@@ -3,7 +3,7 @@ import SwiftUI
 struct BiblioAgeView: View {
     @Environment(\.dismiss) var dismiss
     
-    let idades: [String] = ["4 a 5", "6 a 7", "8 a 10"]
+    let idades: [String] = ["4 - 5", "6 - 7", "8 - 10"]
     
     // Altere de @State para @Binding e remova a inicialização direta
     @Binding var idadeSelecionada: String
@@ -54,5 +54,5 @@ struct BiblioAgeView: View {
 
 // Atualize o Preview passando um valor constante simulado
 #Preview {
-    BiblioAgeView(idadeSelecionada: .constant("4 a 5"))
+    BiblioAgeView(idadeSelecionada: .constant("4 - 5"))
 }

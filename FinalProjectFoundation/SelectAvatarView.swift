@@ -5,6 +5,8 @@ import SwiftDataSQLite
 struct SelectAvatarView: View {
     @Environment(\.dismiss) private var dismiss // Adicionado para fechar a tela
     @Query var avatares: [Avatar]
+    @Query var criancas: [Crianca]
+
     @State private var avatarSelecionado: Avatar?
     
     let colunas = [

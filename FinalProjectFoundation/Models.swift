@@ -19,6 +19,88 @@ class Livro: Identifiable {
     }
 }
 
+@Model
+@SQLiteTable("Livro_Versao_Linha")
+class LivroVersaoLinha: Identifiable {
+    // Como o SwiftData exige uma Primary Key conceitual, mapeamos o id_versao como a propriedade id principal
+    @SQLiteColumn("id_versao")
+    var id: Int
+    
+    @SQLiteColumn("id_livro")
+    var idLivro: Int
+    
+    @SQLiteColumn("faixa_etaria")
+    var faixaEtaria: String // Se no seu banco for número (ex: 4, 6), mude para Int
+    
+    var concluido: Int // Bancos SQLite costumam salvar booleanos como 0 (falso) ou 1 (verdadeiro)
+
+    init(id: Int, idLivro: Int, faixaEtaria: String, concluido: Int) {
+        self.id = id
+        self.idLivro = idLivro
+        self.faixaEtaria = faixaEtaria
+        self.concluido = concluido
+    }
+}
+
+@Model
+@SQLiteTable("Conteudo_Linha")
+class ConteudoLinha: Identifiable {
+    @SQLiteColumn("id_linha")
+    var id: Int
+    
+    @SQLiteColumn("id_versao")
+    var idVersao: Int
+    
+    @SQLiteColumn("ordem_posicao")
+    var ordemPosicao: Int
+    
+    @SQLiteColumn("id_trecho")
+    var idTrecho: Int? // Opcional, pois uma linha pode ser uma atividade em vez de texto
+    
+    @SQLiteColumn("id_atividade")
+    var idAtividade: Int? // Opcional, pois uma linha pode ser um trecho de texto em vez de atividade
+
+    init(id: Int, idVersao: Int, ordemPosicao: Int, idTrecho: Int? = nil, idAtividade: Int? = nil) {
+        self.id = id
+        self.idVersao = idVersao
+        self.ordemPosicao = ordemPosicao
+        self.idTrecho = idTrecho
+        self.idAtividade = idAtividade
+    }
+}
+
+// MARK: - Modelo Trecho
+@Model
+@SQLiteTable("Trecho")
+class Trecho: Identifiable {
+    @SQLiteColumn("id_trecho")
+    var id: Int
+    
+    var texto: String
+
+    init(id: Int, texto: String) {
+        self.id = id
+        self.texto = texto
+    }
+}
+
+// MARK: - Modelo Atividade
+@Model
+@SQLiteTable("Atividade")
+class Atividade: Identifiable {
+    @SQLiteColumn("id_atividade")
+    var id: Int
+    
+    var categoria: String
+    var instrucao: String
+    
+    init(id: Int, categoria: String, instrucao: String) {
+        self.id = id
+        self.categoria = categoria
+        self.instrucao = instrucao
+    }
+}
+
 
 @Model
 @SQLiteTable("Responsavel")
@@ -34,6 +116,7 @@ class Responsavel: Identifiable {
     }
 }
 
+
 @Model
 @SQLiteTable("Crianca")
 class Crianca: Identifiable {
@@ -46,11 +129,12 @@ class Crianca: Identifiable {
     @SQLiteColumn("id_responsavel")
     var idResponsavel: Int
     
-    // Mapeado perfeitamente para a coluna do seu log
-    @SQLiteColumn("avatar")
-    var idAvatar: String
+    // CORREÇÃO: Corrigido o nome da coluna de "avatar" para "id_avatar"
+    // CORREÇÃO: Alterado de String para Int conforme o retorno do seu banco
+    @SQLiteColumn("id_avatar")
+    var idAvatar: Int
 
-    init(id: Int, nome: String, idade: Int, idResponsavel: Int, idAvatar: String) {
+    init(id: Int, nome: String, idade: Int, idResponsavel: Int, idAvatar: Int) {
         self.id = id
         self.nome = nome
         self.idade = idade
@@ -62,12 +146,13 @@ class Crianca: Identifiable {
 @Model
 @SQLiteTable("Avatar")
 class Avatar: Identifiable {
+    // CORREÇÃO: Alterado de String para Int para bater com a chave estrangeira da Crianca
     @SQLiteColumn("id_avatar")
-    var id: String
+    var id: Int
     
     var imagem: Data
 
-    init(id: String, imagem: Data) {
+    init(id: Int, imagem: Data) {
         self.id = id
         self.imagem = imagem
     }

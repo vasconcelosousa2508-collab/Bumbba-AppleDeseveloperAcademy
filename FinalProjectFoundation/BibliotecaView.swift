@@ -10,7 +10,7 @@ struct BibliotecaView: View {
         GridItem(.flexible(), spacing: 16)
     ]
     
-    @State private var idadeSelecionada = "4 a 5"
+    @State private var idadeSelecionada = "4 - 5"
     
     var body: some View {
         NavigationStack {

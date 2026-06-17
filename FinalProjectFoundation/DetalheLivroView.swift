@@ -1,96 +1,81 @@
 import SwiftUI
+import SwiftData
+import SwiftDataSQLite
 
 struct DetalheLivroView: View {
-    let livro: Livro2
-    let faixaEtaria: String
+    @Environment(\.modelContext) private var context
     
-    // Para permitir voltar à tela anterior quando o botão "Concluir História" for pressionado
-    @Environment(\.dismiss) var dismiss
+    // 1. Queries para ler o banco de dados
+    @Query(sort: \ConteudoLinha.ordemPosicao) var todasAsLinhas: [ConteudoLinha]
+    @Query var todosOsTrechos: [Trecho]
     
-    // Obtém a sequência misturada de textos e atividades para a idade selecionada
-    var elementosDoLivro: [ElementoHistoria] {
-        livro.conteudoPorIdade[faixaEtaria] ?? []
+    var idVersaoSelecionada: Int
+    
+    // 2. Lógica de filtragem e relacionamento de tabelas
+    var trechosDaHistoria: [Trecho] {
+        let linhasFiltradas = todasAsLinhas.filter {
+            Int($0.idVersao) == Int(idVersaoSelecionada) && $0.idTrecho != nil
+        }
+        
+        return linhasFiltradas.compactMap { linha in
+            guard let idProcurado = linha.idTrecho else { return nil }
+            return todosOsTrechos.first(where: { Int($0.id) == Int(idProcurado) })
+        }
     }
     
     var body: some View {
         ZStack {
             Color.fundo.ignoresSafeArea()
             
-            VStack(spacing: 0) {
-                
-                // APENAS ESTE BLOCO ROLA NA TELA
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 30) {
-                        
-                        Spacer().frame(height: 10) // Pequeno respiro inicial antes da história
-                        
-                        // Loop Principal da História Intercalada (Corrigido com id)
-                        ForEach(elementosDoLivro, id: \.id) { elemento in
-                            
-                            // 1. Se for texto da estrofe
-                            if let textoEstrofe = elemento.texto {
-                                Text(textoEstrofe)
-                                    .font(FontesDoApp.x(tamanho: 22))
-                                    .foregroundColor(.primary)
-                                    .lineSpacing(10)
-                                    .padding(.horizontal, 25)
-                            }
-                            
-                            // 2. Se for uma Atividade Intercalada
-                            if let atividade = elemento.atividade {
-                                switch atividade.tipo {
-                                case .seguirPontilhado:
-                                    AtividadePontilhadoView()
-                                    
-                                case .multiplaEscolha(let pergunta, let opcoes, let resposta):
-                                    AtividadeMultiplaEscolhaView(pergunta: pergunta, opcoes: opcoes, respostaCorreta: resposta)
-                                    
-                                case .desembaralharLetras(let palavra, let letras):
-                                    AtividadeLetrasView(palavraCerta: palavra, letrasEmbaralhadas: letras)
-                                    
-                                case .desembaralharFrase(let frase, let palavras):
-                                    AtividadeFraseView(fraseCerta: frase, palavrasEmbaralhadas: palavras)
-                                }
-                            }
-                        }
-                        
-                        Spacer().frame(height: 20)
-                        
-                        // BOTÃO DE CONCLUIR HISTÓRIA (Ao final da rolagem, estilo BiblioAgeView)
-                        Button(action: {
-                            dismiss()
-                        }) {
-                            HStack(spacing: 10) {
-                                Text("Concluir História")
-                                    .font(FontesDoApp.x(tamanho: 16))
-                            }
-                            .foregroundColor(.white)
-                            .frame(width: 320, height: 50)
-                            .background(Color.roxoTab)
-                            .cornerRadius(100)
-                            .opacity(0.8)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .center) // Centraliza o botão na tela
-                        .padding(.bottom, 30)
-                    }
+            if trechosDaHistoria.isEmpty {
+                ContentUnavailableView(
+                    "História vazia",
+                    systemImage: "book.closed",
+                    description: Text("Nenhum texto foi encontrado para esta versão do livro.")
+                )
+            } else {
+                // Lista nativa contínua (exibe um embaixo do outro)
+                List(trechosDaHistoria) { trecho in
+                    Text(trecho.texto)
+                        .font(.title2)
+                        .fontWeight(.regular)
+                        .padding(.vertical, 8)
+                        // Deixa cada linha centralizada na tela se quiser o efeito de livro continuo
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .multilineTextAlignment(.center)
+                        // Remove a linha divisória padrão da lista
+                        .listRowSeparator(.hidden)
+                        // Deixa o fundo da linha transparente para usar o do sistema
+                        .listRowBackground(Color.clear)
                 }
+                // Transforma a lista em um bloco limpo sem bordas cinzas extras
+                .listStyle(.plain)
             }
         }
-        // Define o modo inline para o título ficar centralizado na barra ao lado da seta padrão
         .navigationBarTitleDisplayMode(.inline)
-        // Injeta o seu estilo customizado de texto exatamente na posição do título nativo
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text(livro.titulo)
-                    .font(FontesDoApp.xBold(tamanho: 20)) // Fonte Fredoka Bold
-                    .foregroundColor(.roxoTab)          // Cor rosa/roxo do seu app
+                Text("Título do Livro")
+                    .font(FontesDoApp.xBold(tamanho: 20))
+                    .foregroundColor(.roxoTab)
+                    .padding(.top, 30)
             }
         }
     }
 }
 
+// MARK: - Preview Padrão
 #Preview {
-    NavigationStack {
-        DetalheLivroView(livro: DadosManuais.listaLivros[0], faixaEtaria: "6 a 7")
+    if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
+        NavigationStack {
+            DetalheLivroView(idVersaoSelecionada: 101)
+                .modelContainer(
+                    for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoLinha.self, Livro.self],
+                    inMemory: true,
+                    sqliteDatabasePath: dbPath
+                )
+        }
+    } else {
+        ContentUnavailableView("Banco db.sqlite não encontrado", systemImage: "exclamationmark.triangle")
     }
 }
