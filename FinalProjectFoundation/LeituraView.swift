@@ -11,17 +11,16 @@ struct LeituraView: View {
     @Query var todasAsVersoes: [LivroVersaoNivel]
     @Query var todosOsLivros: [Livro]
     
-    var idVersaoSelecionada: Int // Aqui vai entrar o seu 101
+    var idVersaoSelecionada: Int // Passando 101
     
     // 2. LÓGICA DO TÍTULO: Acha o Livro a partir da Versão 101
     var tituloDoLivro: String {
-        // Procura a versão 101 para descobrir qual é o id_livro (no seu exemplo: id_livro 1)
-        guard let versao = todasAsVersoes.first(where: { Int($0.id) == Int(idVersaoSelecionada) }) else {
+        // CORREÇÃO: Compara convertendo ambos os IDs para string ou Int64 para evitar falhas de tipagem do SQLite
+        guard let versao = todasAsVersoes.first(where: { "\($0.id)" == "\(idVersaoSelecionada)" }) else {
             return "Livro Desconhecido"
         }
         
-        // Pega o id_livro (1) e vai buscar o nome dele na tabela Livro ("Se essa rua fosse minha")
-        guard let livro = todosOsLivros.first(where: { Int($0.id) == Int(versao.idLivro) }) else {
+        guard let livro = todosOsLivros.first(where: { "\($0.id)" == "\(versao.idLivro)" }) else {
             return "Livro Desconhecido"
         }
         
@@ -30,15 +29,15 @@ struct LeituraView: View {
     
     // 3. LÓGICA DOS TRECHOS: Acha os textos a partir da Versão 101
     var trechosDaHistoria: [Trecho] {
-        // Filtra na tabela Conteudo tudo o que for da versão 101 (acha o id_trecho 1)
+        // CORREÇÃO: Filtra comparando os tipos de forma flexível como String
         let linhasFiltradas = todasAsLinhas.filter {
-            Int($0.idVersao) == Int(idVersaoSelecionada) && $0.idTrecho != nil
+            "\($0.idVersao)" == "\(idVersaoSelecionada)" && $0.idTrecho != nil
         }
         
-        // Pega o id_trecho (1) e busca o texto real dele lá na tabela Trecho
+        // Pega o id_trecho e busca o texto real dele lá na tabela Trecho
         return linhasFiltradas.compactMap { linha in
             guard let idProcurado = linha.idTrecho else { return nil }
-            return todosOsTrechos.first(where: { Int($0.id) == Int(idProcurado) })
+            return todosOsTrechos.first(where: { "\($0.id)" == "\(idProcurado)" })
         }
     }
     
@@ -50,10 +49,9 @@ struct LeituraView: View {
                 ContentUnavailableView(
                     "História vazia",
                     systemImage: "book.closed",
-                    description: Text("Nenhum texto foi encontrado para esta versão.")
+                    description: Text("Nenhum texto foi encontrado para a versão \(idVersaoSelecionada).\nTotal de linhas no banco: \(todasAsLinhas.count)")
                 )
             } else {
-                // Exibe os textos um embaixo do outro na tela
                 List(trechosDaHistoria) { trecho in
                     Text(trecho.texto)
                         .font(.title2)
@@ -70,7 +68,6 @@ struct LeituraView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                // Mostra o título ("Se essa rua fosse minha") lá no topo da barra
                 Text(tituloDoLivro)
                     .font(FontesDoApp.xBold(tamanho: 20))
                     .foregroundColor(.roxoTab)
@@ -80,19 +77,19 @@ struct LeituraView: View {
     }
 }
 
-// MARK: - Preview Padrão (Usando os seus dados de teste)
+// MARK: - Preview Corrigido
 #Preview {
     if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
         NavigationStack {
-            // Testando exatamente com a versão 101 do seu exemplo
             LeituraView(idVersaoSelecionada: 101)
+                // CORREÇÃO: inMemory precisa ser FALSE para ele ler o arquivo do dbPath
                 .modelContainer(
                     for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoNivel.self, Livro.self],
-                    inMemory: true,
+                    inMemory: false,
                     sqliteDatabasePath: dbPath
                 )
         }
     } else {
-        ContentUnavailableView("Banco db.sqlite não encontrado", systemImage: "exclamationmark.triangle")
+        ContentUnavailableView("Banco db.sqlite não encontrado no Bundle", systemImage: "exclamationmark.triangle")
     }
 }

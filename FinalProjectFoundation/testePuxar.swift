@@ -8,7 +8,7 @@
 //    // 1. Queries para carregar as tabelas na memória
 //    @Query(sort: \ConteudoLinha.ordemPosicao) var todasAsLinhas: [ConteudoLinha]
 //    @Query var todosOsTrechos: [Trecho]
-//    @Query var todasAsVersoes: [LivroVersaoLinha]
+//    @Query var todasAsVersoes: [LivroVersaoNivel]
 //    @Query var todosOsLivros: [Livro]
 //    
 //    var idVersaoSelecionada: Int // Aqui vai entrar o seu 101
@@ -87,7 +87,7 @@
 //            // Testando exatamente com a versão 101 do seu exemplo
 //            LeituraView(idVersaoSelecionada: 101)
 //                .modelContainer(
-//                    for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoLinha.self, Livro.self],
+//                    for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoNivel.self, Livro.self],
 //                    inMemory: true,
 //                    sqliteDatabasePath: dbPath
 //                )

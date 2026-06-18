@@ -4,6 +4,7 @@ import SwiftDataSQLite
 
 struct BibliotecaView: View {
     @Query var livros: [Livro]
+    @Query var todasAsVersoes: [LivroVersaoNivel]
 
     let colunas = [
         GridItem(.flexible(), spacing: 16),
@@ -28,7 +29,6 @@ struct BibliotecaView: View {
                             
                             Spacer()
                             
-                            // MODIFICADO: Substituído o Button por um NavigationLink direcionando para a BiblioAgeView
                             NavigationLink(destination: BiblioAgeView(idadeSelecionada: $idadeSelecionada)) {
                                 HStack(spacing: 10) {
                                     Image(systemName: "chevron.up.chevron.down")
@@ -48,9 +48,17 @@ struct BibliotecaView: View {
                         // MARK: - Grade de Livros
                         LazyVGrid(columns: colunas, spacing: 20) {
                             ForEach(livros) { livro in
-                                Button(action: {
-                                    print("Livro tocado: \(livro.titulo)")
-                                }) {
+                                // LÓGICA DINÂMICA: Procura a versão deste livro no banco de dados.
+                                // Se não encontrar nenhuma versão válida, ele usa o 101 como fallback de segurança.
+                                let idDaVersaoDinamica: Int = {
+                                    if let versaoEncontrada = todasAsVersoes.first(where: { "\($0.idLivro)" == "\(livro.id)" }) {
+                                        return Int(versaoEncontrada.id) ?? 101
+                                    }
+                                    return 101
+                                }()
+                                
+                                // MODIFICADO: Agora passa o ID correto e dinâmico descoberto acima
+                                NavigationLink(destination: LeituraView(idVersaoSelecionada: idDaVersaoDinamica)) {
                                     VStack(spacing: 12) {
                                         
                                         RoundedRectangle(cornerRadius: 12)
@@ -70,7 +78,6 @@ struct BibliotecaView: View {
                                                             .cornerRadius(12)
                                                             .clipped()
                                                     } else {
-                                                        // Caso a imagem falhe ou o banco retorne nulo/vazio, mostra um ícone padrão
                                                         Image(systemName: "book.closed.fill")
                                                             .font(.system(size: 38))
                                                             .foregroundColor(.roxoTab.opacity(0.6))
@@ -90,6 +97,7 @@ struct BibliotecaView: View {
                                     .cornerRadius(12)
                                     .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
                                 }
+                                .buttonStyle(PlainButtonStyle())
                             }
                         }
                         .padding(.horizontal, 20)
@@ -101,12 +109,14 @@ struct BibliotecaView: View {
     }
 }
 
-// MARK: - Preview
+// MARK: - Preview Corrigido
 #Preview {
-    BibliotecaView()
+    let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite")!
+    
+    return BibliotecaView()
         .modelContainer(
-            for: [Livro.self],
-            inMemory: true,
-            sqliteDatabasePath: Bundle.main.path(forResource: "db", ofType: "sqlite")!
+            for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoNivel.self, Livro.self],
+            inMemory: false, // Alterado para false para conseguir ler os dados reais do seu arquivo .sqlite
+            sqliteDatabasePath: dbPath
         )
 }
