@@ -13,6 +13,13 @@ struct BibliotecaView: View {
     
     @State private var idadeSelecionada = "4 - 5"
     
+    // FILTRO DE IDADE: Pega apenas as versões do banco que batem com a idade selecionada
+    var versoesDaIdadeAtual: [LivroVersaoNivel] {
+        todasAsVersoes.filter {
+            $0.faixaEtaria.trimmingCharacters(in: .whitespacesAndNewlines) == idadeSelecionada.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -45,62 +52,64 @@ struct BibliotecaView: View {
                         .padding(.horizontal, 25)
                         .padding(.top, 45)
                         
-                        // MARK: - Grade de Livros
-                        LazyVGrid(columns: colunas, spacing: 20) {
-                            ForEach(livros) { livro in
-                                // LÓGICA DINÂMICA: Procura a versão deste livro no banco de dados.
-                                // Se não encontrar nenhuma versão válida, ele usa o 101 como fallback de segurança.
-                                let idDaVersaoDinamica: Int = {
-                                    if let versaoEncontrada = todasAsVersoes.first(where: { "\($0.idLivro)" == "\(livro.id)" }) {
-                                        return Int(versaoEncontrada.id) ?? 101
-                                    }
-                                    return 101
-                                }()
-                                
-                                // MODIFICADO: Agora passa o ID correto e dinâmico descoberto acima
-                                NavigationLink(destination: LeituraView(idVersaoSelecionada: idDaVersaoDinamica)) {
-                                    VStack(spacing: 12) {
+                        // MARK: - Grade de Livros Dinâmica
+                        if versoesDaIdadeAtual.isEmpty {
+                            ContentUnavailableView(
+                                "Nenhum livro disponível",
+                                systemImage: "book.closed",
+                                description: Text("Não há livros adaptados para a idade de \(idadeSelecionada) anos.")
+                            )
+                            .padding(.top, 40)
+                        } else {
+                            LazyVGrid(columns: colunas, spacing: 20) {
+                                // Iteramos sobre as VERSÕES daquela idade, garantindo o nivelamento
+                                ForEach(versoesDaIdadeAtual) { versao in
+                                    // Localiza o livro correspondente à versão para pegar título e capa
+                                    if let livro = livros.first(where: { "\($0.id)" == "\(versao.idLivro)" }) {
                                         
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color.sombra)
-                                            .frame(width: 170, height: 170)
-                                            .overlay(
-                                                ZStack {
-                                                    Image(systemName: "book.closed.fill")
-                                                        .font(.system(size: 38))
-                                                        .foregroundColor(.roxoTab.opacity(0.6))
-                                                    
-                                                    if let uiImage = UIImage(data: livro.capa) {
-                                                        Image(uiImage: uiImage)
-                                                            .resizable()
-                                                            .scaledToFill()
-                                                            .frame(width: 170, height: 170)
-                                                            .cornerRadius(12)
-                                                            .clipped()
-                                                    } else {
-                                                        Image(systemName: "book.closed.fill")
-                                                            .font(.system(size: 38))
-                                                            .foregroundColor(.roxoTab.opacity(0.6))
-                                                    }
-                                                }
-                                            )
+                                        // Converte o id da versão com segurança (ex: 101, 201)
+                                        let idVersaoInt = Int(versao.id) ?? 101
                                         
-                                        Text(livro.titulo)
-                                            .font(FontesDoApp.x(tamanho: 16))
-                                            .foregroundColor(.primary)
-                                            .multilineTextAlignment(.center)
-                                            .lineLimit(2)
-                                            .frame(height: 40)
+                                        NavigationLink(destination: LeituraView(idVersaoSelecionada: idVersaoInt)) {
+                                            VStack(spacing: 12) {
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .fill(Color.sombra)
+                                                    .frame(width: 170, height: 170)
+                                                    .overlay(
+                                                        ZStack {
+                                                            Image(systemName: "book.closed.fill")
+                                                                .font(.system(size: 38))
+                                                                .foregroundColor(.roxoTab.opacity(0.6))
+                                                            
+                                                            if let uiImage = UIImage(data: livro.capa) {
+                                                                Image(uiImage: uiImage)
+                                                                    .resizable()
+                                                                    .scaledToFill()
+                                                                    .frame(width: 170, height: 170)
+                                                                    .cornerRadius(12)
+                                                                    .clipped()
+                                                            }
+                                                        }
+                                                    )
+                                                
+                                                Text(livro.titulo)
+                                                    .font(FontesDoApp.x(tamanho: 16))
+                                                    .foregroundColor(.primary)
+                                                    .multilineTextAlignment(.center)
+                                                    .lineLimit(2)
+                                                    .frame(height: 40)
+                                            }
+                                            .padding(10)
+                                            .background(Color.fundo)
+                                            .cornerRadius(12)
+                                            .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
                                     }
-                                    .padding(10)
-                                    .background(Color.fundo)
-                                    .cornerRadius(12)
-                                    .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
                                 }
-                                .buttonStyle(PlainButtonStyle())
                             }
+                            .padding(.horizontal, 20)
                         }
-                        .padding(.horizontal, 20)
                     }
                 }
             }
@@ -116,7 +125,7 @@ struct BibliotecaView: View {
     return BibliotecaView()
         .modelContainer(
             for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoNivel.self, Livro.self],
-            inMemory: false, // Alterado para false para conseguir ler os dados reais do seu arquivo .sqlite
+            inMemory: false,
             sqliteDatabasePath: dbPath
         )
 }

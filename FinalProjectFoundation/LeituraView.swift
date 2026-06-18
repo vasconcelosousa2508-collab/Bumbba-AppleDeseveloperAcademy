@@ -5,37 +5,32 @@ import SwiftDataSQLite
 struct LeituraView: View {
     @Environment(\.modelContext) private var context
     
-    // 1. Queries para carregar as tabelas na memória
     @Query(sort: \ConteudoLinha.ordemPosicao) var todasAsLinhas: [ConteudoLinha]
     @Query var todosOsTrechos: [Trecho]
     @Query var todasAsVersoes: [LivroVersaoNivel]
     @Query var todosOsLivros: [Livro]
     
-    var idVersaoSelecionada: Int // Passando 101
+    var idVersaoSelecionada: Int // Recebe o ID dinâmico filtrado (ex: 101, 201)
     
-    // 2. LÓGICA DO TÍTULO: Acha o Livro a partir da Versão 101
+    // MARK: - Título Dinâmico
     var tituloDoLivro: String {
-        // CORREÇÃO: Compara convertendo ambos os IDs para string ou Int64 para evitar falhas de tipagem do SQLite
-        guard let versao = todasAsVersoes.first(where: { "\($0.id)" == "\(idVersaoSelecionada)" }) else {
-            return "Livro Desconhecido"
+        guard let versao = todasAsVersoes.first(where: { "\($0.id)" == "\(idVersaoSelecionada)" }),
+              let livro = todosOsLivros.first(where: { "\($0.id)" == "\(versao.idLivro)" }) else {
+            return "Livro"
         }
-        
-        guard let livro = todosOsLivros.first(where: { "\($0.id)" == "\(versao.idLivro)" }) else {
-            return "Livro Desconhecido"
-        }
-        
         return livro.titulo
     }
     
-    // 3. LÓGICA DOS TRECHOS: Acha os textos a partir da Versão 101
+    // MARK: - Trechos Ordenados
     var trechosDaHistoria: [Trecho] {
-        // CORREÇÃO: Filtra comparando os tipos de forma flexível como String
-        let linhasFiltradas = todasAsLinhas.filter {
+        // 1. Filtra as linhas da versão selecionada que possuem trecho associado
+        let linhasDaVersao = todasAsLinhas.filter {
             "\($0.idVersao)" == "\(idVersaoSelecionada)" && $0.idTrecho != nil
         }
         
-        // Pega o id_trecho e busca o texto real dele lá na tabela Trecho
-        return linhasFiltradas.compactMap { linha in
+        // Como 'todasAsLinhas' já veio ordenada pelo @Query(sort: \ConteudoLinha.ordemPosicao),
+        // este map vai manter a sequência exata de exibição (1, 2, 3...)
+        return linhasDaVersao.compactMap { linha in
             guard let idProcurado = linha.idTrecho else { return nil }
             return todosOsTrechos.first(where: { "\($0.id)" == "\(idProcurado)" })
         }
@@ -47,16 +42,17 @@ struct LeituraView: View {
             
             if trechosDaHistoria.isEmpty {
                 ContentUnavailableView(
-                    "História vazia",
+                    "Conteúdo indisponível",
                     systemImage: "book.closed",
-                    description: Text("Nenhum texto foi encontrado para a versão \(idVersaoSelecionada).\nTotal de linhas no banco: \(todasAsLinhas.count)")
+                    description: Text("Nenhum trecho adaptado foi encontrado para esta versão (\(idVersaoSelecionada)).")
                 )
             } else {
                 List(trechosDaHistoria) { trecho in
                     Text(trecho.texto)
                         .font(.title2)
                         .fontWeight(.regular)
-                        .padding(.vertical, 8)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 20)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .multilineTextAlignment(.center)
                         .listRowSeparator(.hidden)
