@@ -2,6 +2,66 @@ import SwiftUI
 import SwiftData
 import SwiftDataSQLite
 
+@Model
+@SQLiteTable("Responsavel")
+class Responsavel: Identifiable {
+    @SQLiteColumn("id_responsavel")
+    var id: Int
+    
+    var senha: String
+
+    init(id: Int, senha: String) {
+        self.id = id
+        self.senha = senha
+    }
+}
+
+
+@Model
+@SQLiteTable("Crianca")
+class Crianca: Identifiable {
+    @SQLiteColumn("id_crianca")
+    var id: Int
+    
+    var nome: String
+    var idade: Int
+    
+    @SQLiteColumn("id_responsavel")
+    var idResponsavel: Int
+    
+    // CORREÇÃO: Corrigido o nome da coluna de "avatar" para "id_avatar"
+    // CORREÇÃO: Alterado de String para Int conforme o retorno do seu banco
+    @SQLiteColumn("id_avatar")
+    var idAvatar: Int
+
+    init(id: Int, nome: String, idade: Int, idResponsavel: Int, idAvatar: Int) {
+        self.id = id
+        self.nome = nome
+        self.idade = idade
+        self.idResponsavel = idResponsavel
+        self.idAvatar = idAvatar
+    }
+}
+
+@Model
+@SQLiteTable("Avatar")
+class Avatar: Identifiable {
+    // CORREÇÃO: Alterado de String para Int para bater com a chave estrangeira da Crianca
+    @SQLiteColumn("id_avatar")
+    var id: Int
+    
+    var imagem: Data
+
+    init(id: Int, imagem: Data) {
+        self.id = id
+        self.imagem = imagem
+    }
+}
+
+
+
+
+
 
 @Model
 @SQLiteTable("Livro")
@@ -18,10 +78,6 @@ class Livro: Identifiable {
         self.capa = capa
     }
 }
-
-import Foundation
-import SwiftData
-import SwiftDataSQLite
 
 @Model
 @SQLiteTable("Livro_Versao_Nivel") // CORRIGIDO PARA O NOME REAL DO BANCO
@@ -87,7 +143,10 @@ class Trecho: Identifiable {
     }
 }
 
-// MARK: - Modelo Atividade
+
+
+
+
 @Model
 @SQLiteTable("Atividade")
 class Atividade: Identifiable {
@@ -95,7 +154,7 @@ class Atividade: Identifiable {
     var id: Int
     
     var categoria: String
-    var instrucao: String
+    var instrucao: String // O enunciado da questão
     
     init(id: Int, categoria: String, instrucao: String) {
         self.id = id
@@ -104,60 +163,43 @@ class Atividade: Identifiable {
     }
 }
 
-
+// MARK: - Model Múltipla Escolha (Filha)
 @Model
-@SQLiteTable("Responsavel")
-class Responsavel: Identifiable {
-    @SQLiteColumn("id_responsavel")
+@SQLiteTable("Atividade_Multipla_Escolha")
+class AtividadeMultiplaEscolha: Identifiable {
+    @SQLiteColumn("id_atv_me")
     var id: Int
     
-    var senha: String
-
-    init(id: Int, senha: String) {
+    @SQLiteColumn("id_atividade")
+    var idAtividade: Int // Relacionamento / Chave Estrangeira
+    
+    var opcoes: String // Salvo no banco como: "Opção A;Opção B;Opção C"
+    
+    @SQLiteColumn("resposta_correta")
+    var respostaCorreta: String // Guarda o índice original como String (ex: "0", "1")
+    
+    init(id: Int, idAtividade: Int, opcoes: String, respostaCorreta: String) {
         self.id = id
-        self.senha = senha
+        self.idAtividade = idAtividade
+        self.opcoes = opcoes
+        self.respostaCorreta = respostaCorreta
     }
-}
-
-
-@Model
-@SQLiteTable("Crianca")
-class Crianca: Identifiable {
-    @SQLiteColumn("id_crianca")
-    var id: Int
     
-    var nome: String
-    var idade: Int
-    
-    @SQLiteColumn("id_responsavel")
-    var idResponsavel: Int
-    
-    // CORREÇÃO: Corrigido o nome da coluna de "avatar" para "id_avatar"
-    // CORREÇÃO: Alterado de String para Int conforme o retorno do seu banco
-    @SQLiteColumn("id_avatar")
-    var idAvatar: Int
-
-    init(id: Int, nome: String, idade: Int, idResponsavel: Int, idAvatar: Int) {
-        self.id = id
-        self.nome = nome
-        self.idade = idade
-        self.idResponsavel = idResponsavel
-        self.idAvatar = idAvatar
-    }
-}
-
-@Model
-@SQLiteTable("Avatar")
-class Avatar: Identifiable {
-    // CORREÇÃO: Alterado de String para Int para bater com a chave estrangeira da Crianca
-    @SQLiteColumn("id_avatar")
-    var id: Int
-    
-    var imagem: Data
-
-    init(id: Int, imagem: Data) {
-        self.id = id
-        self.imagem = imagem
+    // MARK: - Lógica de Preparação do Jogo
+    // Retorna a lista de opções convertida em Array e a String exata da resposta correta
+    func prepararJogo() -> (opcoesEmbaralhadas: [String], textoCorreto: String)? {
+        let listaOriginal = opcoes.components(separatedBy: ";")
+        
+        // Converte o índice salvo (String) para Int de forma segura
+        guard let indiceCorreto = Int(respostaCorreta),
+              listaOriginal.indices.contains(indiceCorreto) else {
+            return nil
+        }
+        
+        let textoDaRespostaCorreta = listaOriginal[indiceCorreto]
+        let listaEmbaralhada = listaOriginal.shuffled() // 👈 Embaralha aqui!
+        
+        return (listaEmbaralhada, textoDaRespostaCorreta)
     }
 }
 
@@ -165,86 +207,88 @@ class Avatar: Identifiable {
 
 
 
-
-
-// 1. Tipos de atividades disponíveis
-enum TipoAtividade {
-    case seguirPontilhado
-    case multiplaEscolha(pergunta: String, opcoes: [String], respostaCorreta: String)
-    case desembaralharLetras(palavraCerta: String, letrasEmbaralhadas: [String])
-    case desembaralharFrase(fraseCerta: String, palavrasEmbaralhadas: [String])
-}
-
-// 2. Modelo da Atividade
-struct AtividadeItem: Identifiable {
-    let id = UUID()
-    let tipo: TipoAtividade
-}
-
-// 3. O elemento que vai na lista de rolagem (Pode ser Texto OU Atividade)
-struct ElementoHistoria: Identifiable {
-    let id = UUID() // Certifique-se de que está como 'let' e inicializado com UUID()
-    let texto: String?
-    let atividade: AtividadeItem?
-}
-
-// 4. Modelo do Livro
-struct Livro2: Identifiable {
-    let id: Int
-    let titulo: String
-    let imagemCapa: String
-    let conteudoPorIdade: [String: [ElementoHistoria]] // Idade -> Lista misturada de textos e atividades
-}
-
-// 5. Dados manuais com as estrofes e suas respectivas atividades
-enum DadosManuais {
-    static let listaLivros: [Livro2] = [
-        Livro2(
-            id: 1,
-            titulo: "Se Essa Rua Fosse Minha",
-            imagemCapa: "capa_rua",
-            conteudoPorIdade: [
-                "4 a 5": [
-                    ElementoHistoria(texto: "Se essa rua, se essa rua fosse minha... Eu mandava, eu mandava ladrilhar.", atividade: nil),
-                    
-                    // Atividade 1: Seguir o pontilhado (coordenação motora)
-                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .seguirPontilhado)),
-                    
-                    ElementoHistoria(texto: "Com pedrinhas, com pedrinhas de brilhantes... Para o meu, para o meu amor passar.", atividade: nil),
-                    
-                    // Atividade 2: Desembaralhar letras simples
-                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .desembaralharLetras(palavraCerta: "AMOR", letrasEmbaralhadas: ["M", "R", "A", "O"])))
-                ],
-                
-                "6 a 7": [
-                    ElementoHistoria(texto: "Nesta rua, nesta rua tem um bosque, que se chama, que se chama solidão.", atividade: nil),
-                    
-                    // Atividade 3: Múltipla Escolha
-                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .multiplaEscolha(
-                        pergunta: "Qual é o nome do bosque que fica na rua?",
-                        opcoes: ["Felicidade", "Solidão", "Brilhante", "Amor"],
-                        respostaCorreta: "Solidão"
-                    ))),
-                    
-                    ElementoHistoria(texto: "Dentro dele, dentro dele mora um anjo, que roubou, que roubou meu coração.", atividade: nil),
-                    
-                    // Atividade 4: Desembaralhar Frase
-                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .desembaralharFrase(
-                        fraseCerta: "O anjo mora no bosque",
-                        palavrasEmbaralhadas: ["no", "mora", "O", "bosque", "anjo"]
-                    )))
-                ],
-                
-                "8 a 10": [
-                    ElementoHistoria(texto: "Se essa rua, se essa rua fosse minha, eu mandava, eu mandava ladrilhar. Com pedrinhas, com pedrinhas de brilhantes, para o meu, para o meu amor passar.", atividade: nil),
-                    
-                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .multiplaEscolha(
-                        pergunta: "O que o eu lírico mandaria fazer com a rua?",
-                        opcoes: ["Pintar de azul", "Ladrilhar com brilhantes", "Plantar árvores", "Fechar para carros"],
-                        respostaCorreta: "Ladrilhar com brilhantes"
-                    )))
-                ]
-            ]
-        )
-    ]
-}
+//
+//
+//
+//
+//// 1. Tipos de atividades disponíveis
+//enum TipoAtividade {
+//    case seguirPontilhado
+//    case multiplaEscolha(pergunta: String, opcoes: [String], respostaCorreta: String)
+//    case desembaralharLetras(palavraCerta: String, letrasEmbaralhadas: [String])
+//    case desembaralharFrase(fraseCerta: String, palavrasEmbaralhadas: [String])
+//}
+//
+//// 2. Modelo da Atividade
+//struct AtividadeItem: Identifiable {
+//    let id = UUID()
+//    let tipo: TipoAtividade
+//}
+//
+//// 3. O elemento que vai na lista de rolagem (Pode ser Texto OU Atividade)
+//struct ElementoHistoria: Identifiable {
+//    let id = UUID() // Certifique-se de que está como 'let' e inicializado com UUID()
+//    let texto: String?
+//    let atividade: AtividadeItem?
+//}
+//
+//// 4. Modelo do Livro
+////struct Livro2: Identifiable {
+////    let id: Int
+////    let titulo: String
+////    let imagemCapa: String
+////    let conteudoPorIdade: [String: [ElementoHistoria]] // Idade -> Lista misturada de textos e atividades
+////}
+////
+////// 5. Dados manuais com as estrofes e suas respectivas atividades
+////enum DadosManuais {
+////    static let listaLivros: [Livro2] = [
+////        Livro2(
+////            id: 1,
+////            titulo: "Se Essa Rua Fosse Minha",
+////            imagemCapa: "capa_rua",
+////            conteudoPorIdade: [
+////                "4 a 5": [
+////                    ElementoHistoria(texto: "Se essa rua, se essa rua fosse minha... Eu mandava, eu mandava ladrilhar.", atividade: nil),
+////                    
+////                    // Atividade 1: Seguir o pontilhado (coordenação motora)
+////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .seguirPontilhado)),
+////                    
+////                    ElementoHistoria(texto: "Com pedrinhas, com pedrinhas de brilhantes... Para o meu, para o meu amor passar.", atividade: nil),
+////                    
+////                    // Atividade 2: Desembaralhar letras simples
+////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .desembaralharLetras(palavraCerta: "AMOR", letrasEmbaralhadas: ["M", "R", "A", "O"])))
+////                ],
+////                
+////                "6 a 7": [
+////                    ElementoHistoria(texto: "Nesta rua, nesta rua tem um bosque, que se chama, que se chama solidão.", atividade: nil),
+////                    
+////                    // Atividade 3: Múltipla Escolha
+////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .multiplaEscolha(
+////                        pergunta: "Qual é o nome do bosque que fica na rua?",
+////                        opcoes: ["Felicidade", "Solidão", "Brilhante", "Amor"],
+////                        respostaCorreta: "Solidão"
+////                    ))),
+////                    
+////                    ElementoHistoria(texto: "Dentro dele, dentro dele mora um anjo, que roubou, que roubou meu coração.", atividade: nil),
+////                    
+////                    // Atividade 4: Desembaralhar Frase
+////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .desembaralharFrase(
+////                        fraseCerta: "O anjo mora no bosque",
+////                        palavrasEmbaralhadas: ["no", "mora", "O", "bosque", "anjo"]
+////                    )))
+////                ],
+////                
+////                "8 a 10": [
+////                    ElementoHistoria(texto: "Se essa rua, se essa rua fosse minha, eu mandava, eu mandava ladrilhar. Com pedrinhas, com pedrinhas de brilhantes, para o meu, para o meu amor passar.", atividade: nil),
+////                    
+////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .multiplaEscolha(
+////                        pergunta: "O que o eu lírico mandaria fazer com a rua?",
+////                        opcoes: ["Pintar de azul", "Ladrilhar com brilhantes", "Plantar árvores", "Fechar para carros"],
+////                        respostaCorreta: "Ladrilhar com brilhantes"
+////                    )))
+////                ]
+////            ]
+////        )
+////    ]
+////}

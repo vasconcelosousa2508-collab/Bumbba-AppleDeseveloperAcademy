@@ -5,41 +5,39 @@ import SwiftDataSQLite
 struct LeituraView: View {
     @Environment(\.modelContext) private var context
     
+    // 1. Queries para carregar as tabelas na memória
     @Query(sort: \ConteudoLinha.ordemPosicao) var todasAsLinhas: [ConteudoLinha]
     @Query var todosOsTrechos: [Trecho]
     @Query var todasAsVersoes: [LivroVersaoNivel]
     @Query var todosOsLivros: [Livro]
     
-    var idVersaoSelecionada: Int // Recebe o ID dinâmico filtrado (ex: 101, 201)
+    var idVersaoSelecionada: Int // Passando 101
     
-    // MARK: - Título Dinâmico
+    // 2. LÓGICA DO TÍTULO: Acha o Livro a partir da Versão 101
     var tituloDoLivro: String {
-        guard let versao = todasAsVersoes.first(where: { "\($0.id)" == "\(idVersaoSelecionada)" }),
-              let livro = todosOsLivros.first(where: { "\($0.id)" == "\(versao.idLivro)" }) else {
-            return "Livro"
+        // CORREÇÃO: Compara convertendo ambos os IDs para string ou Int64 para evitar falhas de tipagem do SQLite
+        guard let versao = todasAsVersoes.first(where: { "\($0.id)" == "\(idVersaoSelecionada)" }) else {
+            return "Livro Desconhecido"
         }
+        
+        guard let livro = todosOsLivros.first(where: { "\($0.id)" == "\(versao.idLivro)" }) else {
+            return "Livro Desconhecido"
+        }
+        
         return livro.titulo
     }
     
-    // MARK: - Trechos Ordenados Corrigidos
+    // 3. LÓGICA DOS TRECHOS: Acha os textos a partir da Versão 101
     var trechosDaHistoria: [Trecho] {
-        // 1. Filtra as linhas comparando diretamente por valores Int (evita bugs de formatação de string do SQLite)
-        let linhasDaVersao = todasAsLinhas.filter { linha in
-            let linhaVersaoInt = Int(linha.idVersao) ?? 0
-            return linhaVersaoInt == idVersaoSelecionada && linha.idTrecho != nil
+        // CORREÇÃO: Filtra comparando os tipos de forma flexível como String
+        let linhasFiltradas = todasAsLinhas.filter {
+            "\($0.idVersao)" == "\(idVersaoSelecionada)" && $0.idTrecho != nil
         }
         
-        // Como 'todasAsLinhas' já veio ordenada pelo @Query(sort: \ConteudoLinha.ordemPosicao),
-        // este map vai manter a sequência exata de exibição (1, 2, 3...)
-        return linhasDaVersao.compactMap { linha in
+        // Pega o id_trecho e busca o texto real dele lá na tabela Trecho
+        return linhasFiltradas.compactMap { linha in
             guard let idProcurado = linha.idTrecho else { return nil }
-            
-            // Também busca o ID do trecho convertendo para Int de forma segura
-            return todosOsTrechos.first { trecho in
-                let trechoIdInt = Int(trecho.id) ?? -1
-                let procuradoInt = Int(idProcurado) ?? -2
-                return trechoIdInt == procuradoInt
-            }
+            return todosOsTrechos.first(where: { "\($0.id)" == "\(idProcurado)" })
         }
     }
     
@@ -49,17 +47,16 @@ struct LeituraView: View {
             
             if trechosDaHistoria.isEmpty {
                 ContentUnavailableView(
-                    "Conteúdo indisponível",
+                    "História vazia",
                     systemImage: "book.closed",
-                    description: Text("Nenhum trecho adaptado foi encontrado para esta versão (\(idVersaoSelecionada)).")
+                    description: Text("Nenhum texto foi encontrado para a versão \(idVersaoSelecionada).\nTotal de linhas no banco: \(todasAsLinhas.count)")
                 )
             } else {
                 List(trechosDaHistoria) { trecho in
                     Text(trecho.texto)
                         .font(.title2)
                         .fontWeight(.regular)
-                        .padding(.vertical, 12)
-                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .multilineTextAlignment(.center)
                         .listRowSeparator(.hidden)
@@ -85,9 +82,10 @@ struct LeituraView: View {
     if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
         NavigationStack {
             LeituraView(idVersaoSelecionada: 101)
+                // CORREÇÃO: inMemory precisa ser FALSE para ele ler o arquivo do dbPath
                 .modelContainer(
                     for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoNivel.self, Livro.self],
-                    inMemory: false, // OBRIGATÓRIO false para ler o arquivo do dbPath
+                    inMemory: false,
                     sqliteDatabasePath: dbPath
                 )
         }
