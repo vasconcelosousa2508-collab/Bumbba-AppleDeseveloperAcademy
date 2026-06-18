@@ -28,11 +28,21 @@ struct MainView: View {
     }
 }
 
+// MARK: - Preview Corrigido com todos os Modelos e Lendo o SQLite Real
 #Preview {
-    MainView()
-        .modelContainer(
-            for: [Livro.self, Crianca.self , Responsavel.self, Avatar.self],
-            inMemory: true,
-            sqliteDatabasePath: Bundle.main.path(forResource: "db", ofType: "sqlite")!
-        )
+    if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
+        MainView()
+            .modelContainer(
+                for: [
+                    // Modelos da sua Main/Perfil
+                    Crianca.self, Responsavel.self, Avatar.self,
+                    // Modelos cruciais da Biblioteca e Leitura
+                    Livro.self, LivroVersaoNivel.self, ConteudoLinha.self, Trecho.self, Atividade.self
+                ],
+                inMemory: false, // OBRIGATÓRIO false para ler o arquivo do dbPath
+                sqliteDatabasePath: dbPath
+            )
+    } else {
+        ContentUnavailableView("Banco db.sqlite não encontrado no Bundle", systemImage: "exclamationmark.triangle")
+    }
 }

@@ -21,18 +21,25 @@ struct LeituraView: View {
         return livro.titulo
     }
     
-    // MARK: - Trechos Ordenados
+    // MARK: - Trechos Ordenados Corrigidos
     var trechosDaHistoria: [Trecho] {
-        // 1. Filtra as linhas da versão selecionada que possuem trecho associado
-        let linhasDaVersao = todasAsLinhas.filter {
-            "\($0.idVersao)" == "\(idVersaoSelecionada)" && $0.idTrecho != nil
+        // 1. Filtra as linhas comparando diretamente por valores Int (evita bugs de formatação de string do SQLite)
+        let linhasDaVersao = todasAsLinhas.filter { linha in
+            let linhaVersaoInt = Int(linha.idVersao) ?? 0
+            return linhaVersaoInt == idVersaoSelecionada && linha.idTrecho != nil
         }
         
         // Como 'todasAsLinhas' já veio ordenada pelo @Query(sort: \ConteudoLinha.ordemPosicao),
         // este map vai manter a sequência exata de exibição (1, 2, 3...)
         return linhasDaVersao.compactMap { linha in
             guard let idProcurado = linha.idTrecho else { return nil }
-            return todosOsTrechos.first(where: { "\($0.id)" == "\(idProcurado)" })
+            
+            // Também busca o ID do trecho convertendo para Int de forma segura
+            return todosOsTrechos.first { trecho in
+                let trechoIdInt = Int(trecho.id) ?? -1
+                let procuradoInt = Int(idProcurado) ?? -2
+                return trechoIdInt == procuradoInt
+            }
         }
     }
     
@@ -78,10 +85,9 @@ struct LeituraView: View {
     if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
         NavigationStack {
             LeituraView(idVersaoSelecionada: 101)
-                // CORREÇÃO: inMemory precisa ser FALSE para ele ler o arquivo do dbPath
                 .modelContainer(
                     for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoNivel.self, Livro.self],
-                    inMemory: false,
+                    inMemory: false, // OBRIGATÓRIO false para ler o arquivo do dbPath
                     sqliteDatabasePath: dbPath
                 )
         }

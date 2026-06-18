@@ -3,10 +3,12 @@ import SwiftData
 import SwiftDataSQLite
 
 struct SelectAvatarView: View {
-    @Environment(\.dismiss) private var dismiss // Adicionado para fechar a tela
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    
     @Query var avatares: [Avatar]
-    @Query var criancas: [Crianca]
-
+    
+    var crianca: Crianca // Recebe a instância da criança da tela anterior
     @State private var avatarSelecionado: Avatar?
     
     let colunas = [
@@ -18,16 +20,13 @@ struct SelectAvatarView: View {
         ZStack {
             Color.fundo.ignoresSafeArea()
             
-            // O VStack principal separa o conteúdo rolável do botão fixo
             VStack(spacing: 0) {
-                
-                // 1. Área de Rolagem (Apenas para os Avatares)
+                // 1. Área de Rolagem dos Avatares
                 ScrollView {
                     LazyVGrid(columns: colunas, spacing: 25) {
                         ForEach(avatares) { avatar in
                             Button(action: {
                                 avatarSelecionado = avatar
-                                print("Avatar selecionado: \(avatar.id)")
                             }) {
                                 VStack(spacing: 0) {
                                     if let uiImage = UIImage(data: avatar.imagem) {
@@ -45,7 +44,8 @@ struct SelectAvatarView: View {
                                 }
                             }
                             .padding(8)
-                            .background(avatarSelecionado?.id == avatar.id ? Color.roxoTab.opacity(0.2) : Color.clear)
+                            // Alinha os IDs para inteiros caso o banco use formato misto
+                            .background(Int("\(avatarSelecionado?.id ?? -1)") == Int("\(avatar.id)") ? Color.roxoTab.opacity(0.2) : Color.clear)
                             .cornerRadius(12)
                             .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
                         }
@@ -53,10 +53,18 @@ struct SelectAvatarView: View {
                     .padding()
                 }
                 
-                // 2. Área Fixa do Botão (Sempre visível no rodapé)
+                // 2. Área Fixa do Botão de Confirmação
                 VStack {
                     Button(action: {
-                        dismiss() // Fecha a tela ao confirmar
+                        if let novoAvatar = avatarSelecionado {
+                            // ATUALIZAÇÃO NO SWIFTDATA: Atribui o novo ID de avatar à criança
+                            // Adapte o tipo (ex: String(novoAvatar.id) ou Int(novoAvatar.id)) conforme seu model real exige
+                            crianca.idAvatar = novoAvatar.id
+                            
+                            // Força a gravação imediata no SQLite
+                            try? context.save()
+                        }
+                        dismiss() // Fecha e volta atualizado automaticamente
                     }) {
                         HStack(spacing: 10) {
                             Text("Confirmar")
@@ -66,26 +74,35 @@ struct SelectAvatarView: View {
                         .frame(width: 320, height: 50)
                         .background(Color.roxoTab)
                         .cornerRadius(100)
-                        // Deixa o botão semi-transparente se nada foi selecionado
                         .opacity(avatarSelecionado == nil ? 0.5 : 1.0)
                     }
-                    // Desabilita o clique se o usuário não escolheu uma foto
                     .disabled(avatarSelecionado == nil)
                     .padding(.top, 15)
                     .padding(.bottom, 10)
                 }
                 .frame(maxWidth: .infinity)
-                .background(Color.fundo) // Evita que avatares vazem por baixo do botão
+                .background(Color.fundo)
             }
+        }
+        .onAppear {
+            // Inicializa a seleção visual com o avatar que a criança já usa hoje
+            avatarSelecionado = avatares.first(where: { Int("\($0.id)") == Int("\(crianca.idAvatar)") })
         }
     }
 }
 
 #Preview {
-    SelectAvatarView()
-        .modelContainer(
-            for: [Avatar.self],
-            inMemory: true,
-            sqliteDatabasePath: Bundle.main.path(forResource: "db", ofType: "sqlite")!
-        )
+    // Apenas criando um mockup rápido para rodar o preview
+    let mockCrianca = Crianca(id: 1, nome: "Gabi", idade: 5, idResponsavel: 1 , idAvatar: 1 )
+    
+    if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
+        SelectAvatarView(crianca: mockCrianca)
+            .modelContainer(
+                for: [Avatar.self, Crianca.self],
+                inMemory: false,
+                sqliteDatabasePath: dbPath
+            )
+    } else {
+        ContentUnavailableView("Banco não encontrado", systemImage: "xmark")
+    }
 }
