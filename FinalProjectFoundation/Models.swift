@@ -146,7 +146,6 @@ class Trecho: Identifiable {
 
 
 
-
 @Model
 @SQLiteTable("Atividade")
 class Atividade: Identifiable {
@@ -154,51 +153,48 @@ class Atividade: Identifiable {
     var id: Int
     
     var categoria: String
-    var instrucao: String // O enunciado da questão
     
-    init(id: Int, categoria: String, instrucao: String) {
+    init(id: Int, categoria: String) {
         self.id = id
         self.categoria = categoria
-        self.instrucao = instrucao
     }
 }
 
-
+// MARK: - 2. MODELO MULTIPLA ESCOLHA (Tabela Filha)
 @Model
 @SQLiteTable("Atividade_Multipla_Escolha")
 class AtividadeMultiplaEscolha: Identifiable {
-    
     @SQLiteColumn("id_atv_me")
     var id: Int
     
     @SQLiteColumn("id_atividade")
-    var idAtividade: Int
+    var idAtividade: Int // Chave Estrangeira (FK)
     
-    // Texto puro do DB Browser (Ex: "Opção A;Opção B;Opção C")
-    // O gerador vai mapear isso aqui perfeitamente e sem erros
-    @SQLiteColumn("opcoes")
     var opcoes: String
     
     @SQLiteColumn("resposta_correta")
-    var respostaCorreta: Int
+    var respostaCorreta: Int // Índice numérico (0, 1, 2...)
     
-    // MARK: - Propriedade Computada para o SwiftUI
-    // Como NÃO tem @SQLiteColumn, o gerador de código vai ignorar essa propriedade!
-    var listaOpcoes: [String] {
-        get {
-            if opcoes.isEmpty { return [] }
-            return opcoes.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespaces) }
-        }
-        set {
-            self.opcoes = newValue.joined(separator: ";")
-        }
-    }
+    var instrucao: String // O enunciado da pergunta se mudou para cá
     
-    // MARK: - Inicializador
-    init(id: Int, idAtividade: Int, opcoes: String, respostaCorreta: Int) {
+    init(id: Int, idAtividade: Int, opcoes: String, respostaCorreta: Int, instrucao: String) {
         self.id = id
         self.idAtividade = idAtividade
         self.opcoes = opcoes
         self.respostaCorreta = respostaCorreta
+        self.instrucao = instrucao
+    }
+}
+
+extension AtividadeMultiplaEscolha {
+    var listaDeOpcoes: [String] {
+        // Separa pela vírgula
+        let componentes = opcoes.components(separatedBy: ",")
+        
+        // Remove as aspas e espaços em branco que sobram de cada item
+        return componentes.map { item in
+            item.trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "\"", with: "")
+        }
     }
 }
