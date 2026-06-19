@@ -4,6 +4,7 @@ import SwiftDataSQLite
 
 struct LeituraView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) var dismiss // Permite voltar para a tela anterior ao concluir
     
     // 1. Queries para carregar as tabelas na memória
     @Query(sort: \ConteudoLinha.ordemPosicao) var todasAsLinhas: [ConteudoLinha]
@@ -15,7 +16,6 @@ struct LeituraView: View {
     
     // 2. LÓGICA DO TÍTULO: Acha o Livro a partir da Versão 101
     var tituloDoLivro: String {
-        // CORREÇÃO: Compara convertendo ambos os IDs para string ou Int64 para evitar falhas de tipagem do SQLite
         guard let versao = todasAsVersoes.first(where: { "\($0.id)" == "\(idVersaoSelecionada)" }) else {
             return "Livro Desconhecido"
         }
@@ -29,12 +29,10 @@ struct LeituraView: View {
     
     // 3. LÓGICA DOS TRECHOS: Acha os textos a partir da Versão 101
     var trechosDaHistoria: [Trecho] {
-        // CORREÇÃO: Filtra comparando os tipos de forma flexível como String
         let linhasFiltradas = todasAsLinhas.filter {
             "\($0.idVersao)" == "\(idVersaoSelecionada)" && $0.idTrecho != nil
         }
         
-        // Pega o id_trecho e busca o texto real dele lá na tabela Trecho
         return linhasFiltradas.compactMap { linha in
             guard let idProcurado = linha.idTrecho else { return nil }
             return todosOsTrechos.first(where: { "\($0.id)" == "\(idProcurado)" })
@@ -52,17 +50,37 @@ struct LeituraView: View {
                     description: Text("Nenhum texto foi encontrado para a versão \(idVersaoSelecionada).\nTotal de linhas no banco: \(todasAsLinhas.count)")
                 )
             } else {
-                List(trechosDaHistoria) { trecho in
-                    Text(trecho.texto)
-                        .font(.title2)
-                        .fontWeight(.regular)
-                        .padding(.vertical, 8)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .multilineTextAlignment(.center)
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
+                // Organiza a lista de leitura e o botão fixo na parte inferior da tela
+                VStack(spacing: 0) {
+                    List(trechosDaHistoria) { trecho in
+                        Text(trecho.texto)
+                            .font(.title2)
+                            .fontWeight(.regular)
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .multilineTextAlignment(.center)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                    }
+                    .listStyle(.plain)
+                    
+                    // Botão Concluir integrado no estilo solicitado
+                    Button(action: {
+                        // Ação ao concluir a leitura (ex: voltar de tela)
+                        dismiss()
+                    }) {
+                        HStack {
+                            Text("Concluir")
+                                .font(FontesDoApp.x(tamanho: 16))
+                        }
+                        .foregroundColor(.white)
+                        .frame(width: 320, height: 50)
+                        .background(Color.roxoTab)
+                        .cornerRadius(100)
+                        .opacity(0.8)
+                    }
+                    .padding(.vertical, 20) // Espaçamento confortável em relação à borda inferior
                 }
-                .listStyle(.plain)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -74,6 +92,7 @@ struct LeituraView: View {
                     .padding(.top, 30)
             }
         }
+        .toolbar(.hidden, for: .tabBar)
     }
 }
 
@@ -82,7 +101,6 @@ struct LeituraView: View {
     if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
         NavigationStack {
             LeituraView(idVersaoSelecionada: 101)
-                // CORREÇÃO: inMemory precisa ser FALSE para ele ler o arquivo do dbPath
                 .modelContainer(
                     for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoNivel.self, Livro.self],
                     inMemory: false,

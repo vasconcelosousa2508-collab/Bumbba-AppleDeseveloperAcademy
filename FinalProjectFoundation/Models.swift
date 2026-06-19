@@ -163,132 +163,42 @@ class Atividade: Identifiable {
     }
 }
 
-// MARK: - Model Múltipla Escolha (Filha)
+
 @Model
 @SQLiteTable("Atividade_Multipla_Escolha")
 class AtividadeMultiplaEscolha: Identifiable {
+    
     @SQLiteColumn("id_atv_me")
     var id: Int
     
     @SQLiteColumn("id_atividade")
-    var idAtividade: Int // Relacionamento / Chave Estrangeira
+    var idAtividade: Int
     
-    var opcoes: String // Salvo no banco como: "Opção A;Opção B;Opção C"
+    // Texto puro do DB Browser (Ex: "Opção A;Opção B;Opção C")
+    // O gerador vai mapear isso aqui perfeitamente e sem erros
+    @SQLiteColumn("opcoes")
+    var opcoes: String
     
     @SQLiteColumn("resposta_correta")
-    var respostaCorreta: String // Guarda o índice original como String (ex: "0", "1")
+    var respostaCorreta: Int
     
-    init(id: Int, idAtividade: Int, opcoes: String, respostaCorreta: String) {
+    // MARK: - Propriedade Computada para o SwiftUI
+    // Como NÃO tem @SQLiteColumn, o gerador de código vai ignorar essa propriedade!
+    var listaOpcoes: [String] {
+        get {
+            if opcoes.isEmpty { return [] }
+            return opcoes.components(separatedBy: ";").map { $0.trimmingCharacters(in: .whitespaces) }
+        }
+        set {
+            self.opcoes = newValue.joined(separator: ";")
+        }
+    }
+    
+    // MARK: - Inicializador
+    init(id: Int, idAtividade: Int, opcoes: String, respostaCorreta: Int) {
         self.id = id
         self.idAtividade = idAtividade
         self.opcoes = opcoes
         self.respostaCorreta = respostaCorreta
     }
-    
-    // MARK: - Lógica de Preparação do Jogo
-    // Retorna a lista de opções convertida em Array e a String exata da resposta correta
-    func prepararJogo() -> (opcoesEmbaralhadas: [String], textoCorreto: String)? {
-        let listaOriginal = opcoes.components(separatedBy: ";")
-        
-        // Converte o índice salvo (String) para Int de forma segura
-        guard let indiceCorreto = Int(respostaCorreta),
-              listaOriginal.indices.contains(indiceCorreto) else {
-            return nil
-        }
-        
-        let textoDaRespostaCorreta = listaOriginal[indiceCorreto]
-        let listaEmbaralhada = listaOriginal.shuffled() // 👈 Embaralha aqui!
-        
-        return (listaEmbaralhada, textoDaRespostaCorreta)
-    }
 }
-
-
-
-
-
-//
-//
-//
-//
-//// 1. Tipos de atividades disponíveis
-//enum TipoAtividade {
-//    case seguirPontilhado
-//    case multiplaEscolha(pergunta: String, opcoes: [String], respostaCorreta: String)
-//    case desembaralharLetras(palavraCerta: String, letrasEmbaralhadas: [String])
-//    case desembaralharFrase(fraseCerta: String, palavrasEmbaralhadas: [String])
-//}
-//
-//// 2. Modelo da Atividade
-//struct AtividadeItem: Identifiable {
-//    let id = UUID()
-//    let tipo: TipoAtividade
-//}
-//
-//// 3. O elemento que vai na lista de rolagem (Pode ser Texto OU Atividade)
-//struct ElementoHistoria: Identifiable {
-//    let id = UUID() // Certifique-se de que está como 'let' e inicializado com UUID()
-//    let texto: String?
-//    let atividade: AtividadeItem?
-//}
-//
-//// 4. Modelo do Livro
-////struct Livro2: Identifiable {
-////    let id: Int
-////    let titulo: String
-////    let imagemCapa: String
-////    let conteudoPorIdade: [String: [ElementoHistoria]] // Idade -> Lista misturada de textos e atividades
-////}
-////
-////// 5. Dados manuais com as estrofes e suas respectivas atividades
-////enum DadosManuais {
-////    static let listaLivros: [Livro2] = [
-////        Livro2(
-////            id: 1,
-////            titulo: "Se Essa Rua Fosse Minha",
-////            imagemCapa: "capa_rua",
-////            conteudoPorIdade: [
-////                "4 a 5": [
-////                    ElementoHistoria(texto: "Se essa rua, se essa rua fosse minha... Eu mandava, eu mandava ladrilhar.", atividade: nil),
-////                    
-////                    // Atividade 1: Seguir o pontilhado (coordenação motora)
-////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .seguirPontilhado)),
-////                    
-////                    ElementoHistoria(texto: "Com pedrinhas, com pedrinhas de brilhantes... Para o meu, para o meu amor passar.", atividade: nil),
-////                    
-////                    // Atividade 2: Desembaralhar letras simples
-////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .desembaralharLetras(palavraCerta: "AMOR", letrasEmbaralhadas: ["M", "R", "A", "O"])))
-////                ],
-////                
-////                "6 a 7": [
-////                    ElementoHistoria(texto: "Nesta rua, nesta rua tem um bosque, que se chama, que se chama solidão.", atividade: nil),
-////                    
-////                    // Atividade 3: Múltipla Escolha
-////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .multiplaEscolha(
-////                        pergunta: "Qual é o nome do bosque que fica na rua?",
-////                        opcoes: ["Felicidade", "Solidão", "Brilhante", "Amor"],
-////                        respostaCorreta: "Solidão"
-////                    ))),
-////                    
-////                    ElementoHistoria(texto: "Dentro dele, dentro dele mora um anjo, que roubou, que roubou meu coração.", atividade: nil),
-////                    
-////                    // Atividade 4: Desembaralhar Frase
-////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .desembaralharFrase(
-////                        fraseCerta: "O anjo mora no bosque",
-////                        palavrasEmbaralhadas: ["no", "mora", "O", "bosque", "anjo"]
-////                    )))
-////                ],
-////                
-////                "8 a 10": [
-////                    ElementoHistoria(texto: "Se essa rua, se essa rua fosse minha, eu mandava, eu mandava ladrilhar. Com pedrinhas, com pedrinhas de brilhantes, para o meu, para o meu amor passar.", atividade: nil),
-////                    
-////                    ElementoHistoria(texto: nil, atividade: AtividadeItem(tipo: .multiplaEscolha(
-////                        pergunta: "O que o eu lírico mandaria fazer com a rua?",
-////                        opcoes: ["Pintar de azul", "Ladrilhar com brilhantes", "Plantar árvores", "Fechar para carros"],
-////                        respostaCorreta: "Ladrilhar com brilhantes"
-////                    )))
-////                ]
-////            ]
-////        )
-////    ]
-////}
