@@ -65,7 +65,7 @@ struct BibliotecaView: View {
                                 ForEach(versoesDaIdadeAtual) { versao in
                                     if let livro = livros.first(where: { "\($0.id)" == "\(versao.idLivro)" }) {
                                         
-                                        let idVersaoInt = Int(versao.id) ?? 101
+                                        let idVersaoInt = Int(versao.id)
                                         
                                         // 💡 SUBSTUIÇÃO AQUI: Trocado LeituraView por FluxoHistoriaEAtividadeView
                                         NavigationLink(destination: FluxoHistoriaEAtividadeView(idVersaoSelecionada: idVersaoInt)) {

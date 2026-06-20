@@ -28,18 +28,18 @@ struct MainView: View {
     }
 }
 
-// MARK: - Preview Corrigido com todos os Modelos e Lendo o SQLite Real
+// MARK: - Preview Oficial com todos os Modelos Injetados
 #Preview {
     if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
         MainView()
             .modelContainer(
                 for: [
-                    // Modelos da sua Main/Perfil
                     Crianca.self, Responsavel.self, Avatar.self,
-                    // Modelos cruciais da Biblioteca e Leitura
-                    Livro.self, LivroVersaoNivel.self, ConteudoLinha.self, Trecho.self, Atividade.self
+                    Livro.self, LivroVersaoNivel.self, ConteudoLinha.self,
+                    Trecho.self, Atividade.self,
+                    AtividadeMultiplaEscolha.self // 💡 CRUCIAL: Faltava este modelo aqui para a Main carregar os cards!
                 ],
-                inMemory: false, // OBRIGATÓRIO false para ler o arquivo do dbPath
+                inMemory: false,
                 sqliteDatabasePath: dbPath
             )
     } else {
