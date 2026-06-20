@@ -62,15 +62,13 @@ struct BibliotecaView: View {
                             .padding(.top, 40)
                         } else {
                             LazyVGrid(columns: colunas, spacing: 20) {
-                                // Iteramos sobre as VERSÕES daquela idade, garantindo o nivelamento
                                 ForEach(versoesDaIdadeAtual) { versao in
-                                    // Localiza o livro correspondente à versão para pegar título e capa
                                     if let livro = livros.first(where: { "\($0.id)" == "\(versao.idLivro)" }) {
                                         
-                                        // Converte o id da versão com segurança (ex: 101, 201)
                                         let idVersaoInt = Int(versao.id) ?? 101
                                         
-                                        NavigationLink(destination: LeituraView(idVersaoSelecionada: idVersaoInt)) {
+                                        // 💡 SUBSTUIÇÃO AQUI: Trocado LeituraView por FluxoHistoriaEAtividadeView
+                                        NavigationLink(destination: FluxoHistoriaEAtividadeView(idVersaoSelecionada: idVersaoInt)) {
                                             VStack(spacing: 12) {
                                                 RoundedRectangle(cornerRadius: 12)
                                                     .fill(Color.sombra)
@@ -91,7 +89,7 @@ struct BibliotecaView: View {
                                                             }
                                                         }
                                                     )
-                                                
+                                              
                                                 Text(livro.titulo)
                                                     .font(FontesDoApp.x(tamanho: 16))
                                                     .foregroundColor(.primary)
@@ -124,7 +122,14 @@ struct BibliotecaView: View {
     
     return BibliotecaView()
         .modelContainer(
-            for: [ConteudoLinha.self, Trecho.self, Atividade.self, LivroVersaoNivel.self, Livro.self],
+            for: [
+                ConteudoLinha.self,
+                Trecho.self,
+                Atividade.self,
+                AtividadeMultiplaEscolha.self, // 💡 Adicionado para o preview do fluxo de atividades funcionar
+                LivroVersaoNivel.self,
+                Livro.self
+            ],
             inMemory: false,
             sqliteDatabasePath: dbPath
         )

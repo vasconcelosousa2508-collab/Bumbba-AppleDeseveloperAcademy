@@ -122,7 +122,7 @@ struct AtividadeTesteDebugView: View {
                 .padding(.top, 24)
                 .padding(.bottom, 34) // Margem de segurança para a Dynamic Island/Home Indicator do iPhone
                 .background(
-                    Color(uiColor: .systemBackground)
+                    Color(.roxoEscuroBnt)
                         .shadow(color: Color.black.opacity(0.15), radius: 10, y: -5)
                 )
                 .transition(.move(edge: .bottom)) // Define que a animação surge de baixo
