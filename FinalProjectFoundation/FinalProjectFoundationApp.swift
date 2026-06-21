@@ -17,7 +17,7 @@ struct FinalProjectFoundationApp: App {
                     for: [
                         Crianca.self, Responsavel.self, Avatar.self,
                         Livro.self, LivroVersaoNivel.self, ConteudoLinha.self,
-                        Trecho.self, Atividade.self, AtividadeMultiplaEscolha.self
+                        Trecho.self, Atividade.self, AtividadeMultiplaEscolha.self, AtividadeDesembaralhar.self
                     ],
                     // 💡 IMPORTANTE: Mude de 'true' para 'false'.
                     // Se deixar 'true' (inMemory), ele ignora o seu arquivo SQLite e cria um banco limpo toda vez.
