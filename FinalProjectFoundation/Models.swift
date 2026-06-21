@@ -198,3 +198,42 @@ extension AtividadeMultiplaEscolha {
 }
 
 
+@Model
+@SQLiteTable("Atividade_Desembaralhar")
+class AtividadeDesembaralhar: Identifiable {
+    @SQLiteColumn("id_atv_dsmb")
+    var id: Int
+    
+    @SQLiteColumn("id_atividade")
+    var idAtividade: Int // Chave Estrangeira (FK) conectando com a tabela Atividade
+    
+    /// Recebe os elementos misturados separados por vírgula.
+    /// Exemplo: "mora, no, o anjo, bosque" ou "Q, U, E, B, O, S"
+    var elementos: String
+    
+    /// Guarda a ordem correta baseada no texto exato ou nos índices esperados.
+    /// Para facilitar a validação, podemos salvar a frase inteira certinha aqui.
+    /// Exemplo: "o anjo mora no bosque" ou "BOSQUE"
+    @SQLiteColumn("resposta_correta")
+    var respostaCorreta: String
+
+    init(id: Int, idAtividade: Int, elementos: String, respostaCorreta: String) {
+        self.id = id
+        self.idAtividade = idAtividade
+        self.elementos = elementos
+        self.respostaCorreta = respostaCorreta
+    }
+}
+
+// MARK: - Extensão de Suporte (Helpers)
+extension AtividadeDesembaralhar {
+    
+    /// Transforma a String do banco de dados em uma lista de strings limpa para os blocos da tela
+    var listaDeElementos: [String] {
+        let componentes = elementos.components(separatedBy: ",")
+        return componentes.map { item in
+            item.trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "\"", with: "")
+        }
+    }
+}

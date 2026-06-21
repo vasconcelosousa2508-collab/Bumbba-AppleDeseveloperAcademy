@@ -10,6 +10,7 @@ struct FluxoHistoriaEAtividadeView: View {
     @Query var todosOsTrechos: [Trecho]
     @Query var todasAtividades: [Atividade]
     @Query var todasMultiplaEscolhas: [AtividadeMultiplaEscolha]
+    @Query var todasDesembaralhar: [AtividadeDesembaralhar] // 🚀 Adicionado a Query da nova tabela
     @Query var todasAsVersoes: [LivroVersaoNivel]
     @Query var todosOsLivros: [Livro]
     
@@ -66,30 +67,55 @@ struct FluxoHistoriaEAtividadeView: View {
                         }
                         
                         else if let idAtividade = linha.idAtividade,
-                                let atividade = todasAtividades.first(where: { $0.id == idAtividade }),
-                                let multiplaEscolha = todasMultiplaEscolhas.first(where: { $0.idAtividade == atividade.id }) {
+                                let atividade = todasAtividades.first(where: { $0.id == idAtividade }) {
                             
-                            // ➡️ Passamos agora o texto vindo da tabela mãe 'atividade.instrucao'
-                            ComponenteMultiplaEscolha(
-                                idAtividade: atividade.id,
-                                instrucao: atividade.instrucao,
-                                multiplaEscolha: multiplaEscolha,
-                                onCorreto: { id in
-                                    atividadesResolvidas[id] = true
-                                    withAnimation(.spring()) {
-                                        mostrarBannerErrado = false
-                                        mostrarBannerCorreto = true
+                            // 💡 INTEGRAÇÃO TIPO 1: Múltipla Escolha
+                            if let multiplaEscolha = todasMultiplaEscolhas.first(where: { $0.idAtividade == atividade.id }) {
+                                ComponenteMultiplaEscolha(
+                                    idAtividade: atividade.id,
+                                    instrucao: atividade.instrucao,
+                                    multiplaEscolha: multiplaEscolha,
+                                    onCorreto: { id in
+                                        atividadesResolvidas[id] = true
+                                        withAnimation(.spring()) {
+                                            mostrarBannerErrado = false
+                                            mostrarBannerCorreto = true
+                                        }
+                                    },
+                                    onErrado: {
+                                        withAnimation(.spring()) {
+                                            mostrarBannerCorreto = false
+                                            mostrarBannerErrado = true
+                                        }
                                     }
-                                },
-                                onErrado: {
-                                    withAnimation(.spring()) {
-                                        mostrarBannerCorreto = false
-                                        mostrarBannerErrado = true
+                                )
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                            }
+                            
+                            // 💡 INTEGRAÇÃO TIPO 2: Desembaralhar (Frases ou Palavras)
+                            else if let desembaralhar = todasDesembaralhar.first(where: { $0.idAtividade == atividade.id }) {
+                                ComponenteDesembaralhar(
+                                    idAtividade: atividade.id,
+                                    instrucao: atividade.instrucao,
+                                    dadosDesembaralhar: desembaralhar,
+                                    onCorreto: { id in
+                                        atividadesResolvidas[id] = true
+                                        withAnimation(.spring()) {
+                                            mostrarBannerErrado = false
+                                            mostrarBannerCorreto = true
+                                        }
+                                    },
+                                    onErrado: {
+                                        withAnimation(.spring()) {
+                                            mostrarBannerCorreto = false
+                                            mostrarBannerErrado = true
+                                        }
                                     }
-                                }
-                            )
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
+                                )
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                            }
                         }
                     }
                     
@@ -170,7 +196,8 @@ struct FluxoHistoriaEAtividadeView: View {
                         for: [
                             Responsavel.self, Crianca.self, Avatar.self,
                             Livro.self, LivroVersaoNivel.self, ConteudoLinha.self,
-                            Trecho.self, Atividade.self, AtividadeMultiplaEscolha.self
+                            Trecho.self, Atividade.self, AtividadeMultiplaEscolha.self,
+                            AtividadeDesembaralhar.self // 🚀 Nova tabela incluída também para o Preview funcionar localmente
                         ],
                         inMemory: true,
                         sqliteDatabasePath: dbPath
