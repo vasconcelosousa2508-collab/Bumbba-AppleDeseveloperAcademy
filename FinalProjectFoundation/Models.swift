@@ -153,14 +153,16 @@ class Atividade: Identifiable {
     var id: Int
     
     var categoria: String
-    
-    init(id: Int, categoria: String) {
+    var instrucao: String // ➡️ A instrução subiu para a tabela mãe
+
+    init(id: Int, categoria: String, instrucao: String) {
         self.id = id
         self.categoria = categoria
+        self.instrucao = instrucao
     }
 }
 
-// MARK: - 2. MODELO MULTIPLA ESCOLHA (Tabela Filha)
+// MARK: - MODELO MULTIPLA ESCOLHA (Tabela Filha)
 @Model
 @SQLiteTable("Atividade_Multipla_Escolha")
 class AtividadeMultiplaEscolha: Identifiable {
@@ -175,26 +177,24 @@ class AtividadeMultiplaEscolha: Identifiable {
     @SQLiteColumn("resposta_correta")
     var respostaCorreta: Int // Índice numérico (0, 1, 2...)
     
-    var instrucao: String // O enunciado da pergunta se mudou para cá
-    
-    init(id: Int, idAtividade: Int, opcoes: String, respostaCorreta: Int, instrucao: String) {
+    // ➡️ A propriedade 'instrucao' foi removida daqui!
+
+    init(id: Int, idAtividade: Int, opcoes: String, respostaCorreta: Int) {
         self.id = id
         self.idAtividade = idAtividade
         self.opcoes = opcoes
         self.respostaCorreta = respostaCorreta
-        self.instrucao = instrucao
     }
 }
 
 extension AtividadeMultiplaEscolha {
     var listaDeOpcoes: [String] {
-        // Separa pela vírgula
         let componentes = opcoes.components(separatedBy: ",")
-        
-        // Remove as aspas e espaços em branco que sobram de cada item
         return componentes.map { item in
             item.trimmingCharacters(in: .whitespacesAndNewlines)
                 .replacingOccurrences(of: "\"", with: "")
         }
     }
 }
+
+

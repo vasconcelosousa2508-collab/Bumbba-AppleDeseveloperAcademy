@@ -2,7 +2,8 @@ import SwiftUI
 import SwiftData
 
 struct ComponenteMultiplaEscolha: View {
-    let idAtividade: Int // 💡 Recebe o ID para repassar nos callbacks
+    let idAtividade: Int
+    let instrucao: String // 💡 Agora recebe o texto da instrução repassado pela View mãe
     let multiplaEscolha: AtividadeMultiplaEscolha
     
     var onCorreto: (Int) -> Void // Retorna o ID resolvido
@@ -13,7 +14,8 @@ struct ComponenteMultiplaEscolha: View {
     
     var body: some View {
         VStack(alignment: .center, spacing: 16) {
-            Text("\(multiplaEscolha.instrucao)")
+            // 💡 Exibe o texto que agora pertence à tabela Atividade
+            Text(instrucao)
                 .font(FontesDoApp.xBold(tamanho: 16))
                 .foregroundColor(.roxoTab)
                 .multilineTextAlignment(.center)
@@ -26,7 +28,7 @@ struct ComponenteMultiplaEscolha: View {
                     guard !travado else { return }
                     
                     indiceSelecionado = index
-                    travado = true
+                    travado = true // Bloqueia novos cliques
                     
                     if index == multiplaEscolha.respostaCorreta {
                         onCorreto(idAtividade)
@@ -57,6 +59,7 @@ struct ComponenteMultiplaEscolha: View {
         .background(Color.sombra.opacity(0.2))
         .cornerRadius(12)
         .padding(.vertical, 10)
+        // Permite resetar o card quando o usuário clica em "Tentar Novamente" no banner inferior
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("ResetarAtividade"))) { _ in
             if indiceSelecionado != multiplaEscolha.respostaCorreta {
                 indiceSelecionado = nil

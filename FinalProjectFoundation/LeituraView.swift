@@ -13,31 +13,26 @@ struct FluxoHistoriaEAtividadeView: View {
     @Query var todasAsVersoes: [LivroVersaoNivel]
     @Query var todosOsLivros: [Livro]
     
-    // Banners Inferiores
     @State private var mostrarBannerCorreto = false
     @State private var mostrarBannerErrado = false
-    
-    // 💡 Controle de validação: Rastreia quais IDs de atividades foram respondidos com sucesso
     @State private var atividadesResolvidas: [Int: Bool] = [:]
     
     var linhasDaVersao: [ConteudoLinha] {
-        todasAsLinhas.filter { "\($0.idVersao)" == "\(idVersaoSelecionada)" }
+        todasAsLinhas.filter { $0.idVersao == idVersaoSelecionada }
     }
     
-    // 💡 Lista de todas as atividades obrigatórias que pertencem especificamente a esta versão
     var idsAtividadesObrigatorias: [Int] {
         linhasDaVersao.compactMap { $0.idAtividade }
     }
     
-    // 💡 Computed property que diz se TODAS as atividades obrigatórias foram concluídas
     var todasAtividadesConcluidas: Bool {
-        guard !idsAtividadesObrigatorias.isEmpty else { return true } // Se não houver desafios, libera direto
+        guard !idsAtividadesObrigatorias.isEmpty else { return true }
         return idsAtividadesObrigatorias.allSatisfy { atividadesResolvidas[$0] == true }
     }
     
     var tituloDoLivro: String {
-        guard let versao = todasAsVersoes.first(where: { "\($0.id)" == "\(idVersaoSelecionada)" }),
-              let livro = todosOsLivros.first(where: { "\($0.id)" == "\(versao.idLivro)" }) else {
+        guard let versao = todasAsVersoes.first(where: { $0.id == idVersaoSelecionada }),
+              let livro = todosOsLivros.first(where: { $0.id == versao.idLivro }) else {
             return "Livro Desconhecido"
         }
         return livro.titulo
@@ -58,7 +53,7 @@ struct FluxoHistoriaEAtividadeView: View {
                     ForEach(linhasDaVersao) { linha in
                         
                         if let idTrecho = linha.idTrecho,
-                           let trecho = todosOsTrechos.first(where: { "\($0.id)" == "\(idTrecho)" }) {
+                           let trecho = todosOsTrechos.first(where: { $0.id == idTrecho }) {
                             
                             Text(trecho.texto)
                                 .font(.title2)
@@ -74,11 +69,12 @@ struct FluxoHistoriaEAtividadeView: View {
                                 let atividade = todasAtividades.first(where: { $0.id == idAtividade }),
                                 let multiplaEscolha = todasMultiplaEscolhas.first(where: { $0.idAtividade == atividade.id }) {
                             
+                            // ➡️ Passamos agora o texto vindo da tabela mãe 'atividade.instrucao'
                             ComponenteMultiplaEscolha(
-                                idAtividade: atividade.id, // 💡 Repassa o id único
+                                idAtividade: atividade.id,
+                                instrucao: atividade.instrucao,
                                 multiplaEscolha: multiplaEscolha,
                                 onCorreto: { id in
-                                    // Marca a atividade como resolvida no dicionário
                                     atividadesResolvidas[id] = true
                                     withAnimation(.spring()) {
                                         mostrarBannerErrado = false
@@ -97,19 +93,13 @@ struct FluxoHistoriaEAtividadeView: View {
                         }
                     }
                     
-                    // ==========================================
-                    // BOTÃO CONCLUIR (BLOQUEADO/DYNAMIC)
-                    // ==========================================
                     Button(action: {
-                        if todasAtividadesConcluidas {
-                            dismiss()
-                        }
+                        if todasAtividadesConcluidas { dismiss() }
                     }) {
                         Text(todasAtividadesConcluidas ? "Concluir Jornada" : "Responda os desafios para concluir")
                             .font(FontesDoApp.x(tamanho: 16))
                             .foregroundColor(.white)
                             .frame(width: 320, height: 50)
-                            // Fica roxo se liberado, senão assume tom cinza opaco de indisponível
                             .background(todasAtividadesConcluidas ? Color.roxoTab : Color.gray.opacity(0.4))
                             .cornerRadius(100)
                     }
@@ -117,75 +107,16 @@ struct FluxoHistoriaEAtividadeView: View {
                     .padding(.vertical, 30)
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
-                    .disabled(!todasAtividadesConcluidas) // Bloqueia a ação de clique se não concluiu tudo
+                    .disabled(!todasAtividadesConcluidas)
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
                 .disabled(mostrarBannerCorreto || mostrarBannerErrado)
             }
             
-            // BANNER INFERIOR - CORRETO (VERDE)
-            if mostrarBannerCorreto {
-                VStack(spacing: 16) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title2)
-                        Text("Excelente! Você acertou!")
-                            .font(.headline)
-                        Spacer()
-                    }
-                    .foregroundColor(.green)
-                    
-                    Button(action: {
-                        withAnimation { mostrarBannerCorreto = false }
-                    }) {
-                        Text("Continuar")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.green)
-                            .cornerRadius(12)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 34)
-                .background(Color(.fundo).shadow(color: Color.fundo.opacity(0.15), radius: 10, y: -5))
-                .transition(.move(edge: .bottom))
-            }
-            
-            // BANNER INFERIOR - ERRADO (VERMELHO)
-            if mostrarBannerErrado {
-                VStack(spacing: 16) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title2)
-                        Text("Resposta errada. Tente novamente!")
-                            .font(.headline)
-                        Spacer()
-                    }
-                    .foregroundColor(.red)
-                    
-                    Button(action: {
-                        withAnimation { mostrarBannerErrado = false }
-                        NotificationCenter.default.post(name: NSNotification.Name("ResetarAtividade"), object: nil)
-                    }) {
-                        Text("Tentar Novamente")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red)
-                            .cornerRadius(12)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 20)
-                .padding(.bottom, 34)
-                .background(Color(.fundo).shadow(color: Color.fundo.opacity(0.15), radius: 10, y: -5))
-                .transition(.move(edge: .bottom))
-            }
+            // Banners mantidos de forma idêntica
+            if mostrarBannerCorreto { bannerSucesso }
+            if mostrarBannerErrado { bannerErro }
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -197,6 +128,35 @@ struct FluxoHistoriaEAtividadeView: View {
             }
         }
         .toolbar(.hidden, for: .tabBar)
+    }
+    
+    private var bannerSucesso: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                Image(systemName: "checkmark.circle.fill").font(.title2)
+                Text("Excelente! Você acertou!").font(.headline)
+                Spacer()
+            }.foregroundColor(.green)
+            Button(action: { withAnimation { mostrarBannerCorreto = false } }) {
+                Text("Continuar").font(.headline).foregroundColor(.white).frame(maxWidth: .infinity).padding().background(Color.green).cornerRadius(12)
+            }
+        }.padding(.horizontal, 24).padding(.top, 20).padding(.bottom, 34).background(Color(.fundo).shadow(color: Color.fundo.opacity(0.15), radius: 10, y: -5)).transition(.move(edge: .bottom))
+    }
+    
+    private var bannerErro: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                Image(systemName: "xmark.circle.fill").font(.title2)
+                Text("Resposta errada. Tente novamente!").font(.headline)
+                Spacer()
+            }.foregroundColor(.red)
+            Button(action: {
+                withAnimation { mostrarBannerErrado = false }
+                NotificationCenter.default.post(name: NSNotification.Name("ResetarAtividade"), object: nil)
+            }) {
+                Text("Tentar Novamente").font(.headline).foregroundColor(.white).frame(maxWidth: .infinity).padding().background(Color.red).cornerRadius(12)
+            }
+        }.padding(.horizontal, 24).padding(.top, 20).padding(.bottom, 34).background(Color(.fundo).shadow(color: Color.fundo.opacity(0.15), radius: 10, y: -5)).transition(.move(edge: .bottom))
     }
 }
 
@@ -212,7 +172,7 @@ struct FluxoHistoriaEAtividadeView: View {
                             Livro.self, LivroVersaoNivel.self, ConteudoLinha.self,
                             Trecho.self, Atividade.self, AtividadeMultiplaEscolha.self
                         ],
-                        inMemory: false,
+                        inMemory: true,
                         sqliteDatabasePath: dbPath
                     )
             }
