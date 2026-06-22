@@ -1,10 +1,3 @@
-//
-//  SelectPerfilView.swift
-//  FinalProjectFoundation
-//
-//  Created by Found on 16/06/26.
-//
-
 import SwiftUI
 import SwiftData
 import SwiftDataSQLite
@@ -12,7 +5,6 @@ import SwiftDataSQLite
 struct NomeView: View {
     @State private var texto: String = ""
     
-    // Propriedade para checar se o input está vazio (ignora espaços em branco)
     private var estaVazio: Bool {
         texto.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -23,7 +15,6 @@ struct NomeView: View {
                 Color.fundo.ignoresSafeArea()
                 
                 VStack {
-                    // 1. Área superior: Imagem isolada no topo
                     Image("rostoBoi")
                         .resizable()
                         .scaledToFit()
@@ -51,30 +42,41 @@ struct NomeView: View {
                             .foregroundColor(.primary)
                     }
                     
-                    Spacer() // Empurra o bloco central para cima e o botão para o rodapé
+                    Spacer()
                     
-                    // 2. NavigationLink básico com validação de estado
-                    NavigationLink(destination: IdadeView()) {
+                    // 🚀 PASSO 1: Enviando o nome digitado para a tela de Idade
+                    NavigationLink(destination: IdadeView(nomeDaCrianca: texto.trimmingCharacters(in: .whitespacesAndNewlines))) {
                         Text("Confirmar")
                             .font(FontesDoApp.x(tamanho: 16))
                             .foregroundColor(.white)
                             .frame(width: 320, height: 50)
-                            .background(
-                                Color.roxoTab
-                                    .cornerRadius(100)
-                            )
+                            .background(Color.roxoTab.cornerRadius(100))
                     }
-                    .disabled(estaVazio) // Desativa o clique se estiver vazio
-                    .opacity(estaVazio ? 0.4 : 1.0) // Fica mais claro se estiver vazio
+                    .disabled(estaVazio)
+                    .opacity(estaVazio ? 0.4 : 1.0)
                     .padding(.bottom, 20)
                 }
             }
         }
-        // Transição de opacidade suave ao digitar
         .animation(.easeInOut(duration: 0.2), value: texto)
     }
 }
 
 #Preview {
-    NomeView()
+    if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
+        NomeView()
+            .modelContainer(
+                for: [
+                    Crianca.self, Responsavel.self, Avatar.self,
+                    Livro.self, LivroVersaoNivel.self, ConteudoLinha.self,
+                    Trecho.self, Atividade.self,
+                    AtividadeMultiplaEscolha.self,
+                    AtividadeDesembaralhar.self
+                ],
+                inMemory: false,
+                sqliteDatabasePath: dbPath
+            )
+    } else {
+        ContentUnavailableView("Banco db.sqlite não encontrado no Bundle", systemImage: "exclamationmark.triangle")
+    }
 }

@@ -12,7 +12,7 @@ struct MainView: View {
                 
                 Tab("Você", systemImage: "star") {
                     ZStack {
-                        PerfilView()
+                        PerfilView() 
                     }
                 }
                 

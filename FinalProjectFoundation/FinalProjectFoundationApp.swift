@@ -12,7 +12,7 @@ import SwiftDataSQLite
 struct FinalProjectFoundationApp: App {
     var body: some Scene {
         WindowGroup {
-            MainView()
+            NomeView()
                 .modelContainer(
                     for: [
                         Crianca.self, Responsavel.self, Avatar.self,

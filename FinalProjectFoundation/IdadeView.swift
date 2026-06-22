@@ -1,18 +1,11 @@
-//
-//  IdadeView.swift
-//  FinalProjectFoundation
-//
-//  Created by Found on 21/06/26.
-//
-
 import SwiftUI
 import SwiftData
 import SwiftDataSQLite
 
 struct IdadeView: View {
-    // Estado monitorando qual idade está no centro absoluto da tela
-    @State private var idadeSelecionada: Int = 4
+    let nomeDaCrianca: String // 🚀 PASSO 2: Armazena o nome recebido da tela anterior
     
+    @State private var idadeSelecionada: Int = 4
     let idades = Array(4...10)
     
     var body: some View {
@@ -20,15 +13,12 @@ struct IdadeView: View {
             Color.fundo.ignoresSafeArea()
             
             VStack {
-                // 1. Área superior: Imagem isolada no topo
                 Image("bolo")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 150, height: 150)
                     .padding(.top, 80)
                 
-                
-                // 2. Área central: Texto e o Seletor Horizontal com Setas
                 VStack(spacing: 35) {
                     Text("Qual a idade da sua criança?")
                         .font(FontesDoApp.xBold(tamanho: 32))
@@ -36,21 +26,15 @@ struct IdadeView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 20)
                     
-                    // Alinhamento das setas com o seletor central
                     HStack(spacing: 15) {
-                        
-                        // Seta Esquerda
                         Image(systemName: "chevron.left")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.gray)
-                            .opacity(idadeSelecionada > idades.first! ? 0.5 : 0.1) // Apaga se for a primeira idade
+                            .opacity(idadeSelecionada > idades.first! ? 0.5 : 0.1)
                             .onTapGesture {
-                                if idadeSelecionada > idades.first! {
-                                    idadeSelecionada -= 1
-                                }
+                                if idadeSelecionada > idades.first! { idadeSelecionada -= 1 }
                             }
                         
-                        // Container do Seletor
                         ZStack {
                             TabView(selection: $idadeSelecionada) {
                                 ForEach(idades, id: \.self) { idade in
@@ -65,7 +49,7 @@ struct IdadeView: View {
                             .tabViewStyle(.page(indexDisplayMode: .never))
                             .frame(width: 160, height: 80)
                         }
-                        .frame(width: 180, height: 80) // Janela interna levemente reduzida para encaixar as setas nas pontas
+                        .frame(width: 180, height: 80)
                         .mask(
                             LinearGradient(
                                 gradient: Gradient(stops: [
@@ -74,20 +58,16 @@ struct IdadeView: View {
                                     .init(color: .black, location: 0.75),
                                     .init(color: .clear, location: 1.0)
                                 ]),
-                                startPoint: .leading,
-                                endPoint: .trailing
+                                startPoint: .leading, endPoint: .trailing
                             )
                         )
                         
-                        // Seta Direita
                         Image(systemName: "chevron.right")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.gray)
-                            .opacity(idadeSelecionada < idades.last! ? 0.5 : 0.1) // Apaga se for a última idade
+                            .opacity(idadeSelecionada < idades.last! ? 0.5 : 0.1)
                             .onTapGesture {
-                                if idadeSelecionada < idades.last! {
-                                    idadeSelecionada += 1
-                                }
+                                if idadeSelecionada < idades.last! { idadeSelecionada += 1 }
                             }
                     }
                     .frame(maxWidth: .infinity)
@@ -96,18 +76,13 @@ struct IdadeView: View {
                 
                 Spacer()
                 
-                // 3. Área inferior: Botão fixado embaixo
-                Button {
-                    print("Idade confirmada: \(idadeSelecionada)")
-                } label: {
+                // 🚀 PASSO 3: Passa o Nome e a Idade selecionada para a tela da Senha
+                NavigationLink(destination: DefinirSenhaView(nomeDaCrianca: nomeDaCrianca, idadeDaCrianca: idadeSelecionada)) {
                     Text("Confirmar")
                         .font(FontesDoApp.x(tamanho: 16))
                         .foregroundColor(.white)
                         .frame(width: 320, height: 50)
-                        .background(
-                            Color.roxoTab
-                                .cornerRadius(100)
-                        )
+                        .background(Color.roxoTab.cornerRadius(100))
                 }
                 .padding(.bottom, 20)
             }
@@ -116,6 +91,21 @@ struct IdadeView: View {
     }
 }
 
-#Preview {
-    IdadeView()
-}
+//#Preview {
+//    if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
+//        IdadeView(nomeDaCrianca: texto.trimmingCharacters(in: .whitespacesAndNewlines))
+//            .modelContainer(
+//                for: [
+//                    Crianca.self, Responsavel.self, Avatar.self,
+//                    Livro.self, LivroVersaoNivel.self, ConteudoLinha.self,
+//                    Trecho.self, Atividade.self,
+//                    AtividadeMultiplaEscolha.self,
+//                    AtividadeDesembaralhar.self
+//                ],
+//                inMemory: false,
+//                sqliteDatabasePath: dbPath
+//            )
+//    } else {
+//        ContentUnavailableView("Banco db.sqlite não encontrado no Bundle", systemImage: "exclamationmark.triangle")
+//    }
+//}
