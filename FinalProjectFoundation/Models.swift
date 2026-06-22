@@ -143,6 +143,44 @@ class Trecho: Identifiable {
     }
 }
 
+extension Trecho {
+    var textoFormatado: Text {
+        // Padrão que procura por "[imagem:QUALQUER_COISA]"
+        // [imagem:(.*?)] captura o que estiver dentro dos parênteses
+        let tagInicial = "[imagem:"
+        let tagFinal = "]"
+        
+        // Verifica se o texto possui o padrão básico de imagem
+        if texto.contains(tagInicial) && texto.contains(tagFinal) {
+            let componentesIniciais = texto.components(separatedBy: tagInicial)
+            
+            // A primeira parte é tudo antes do primeiro '[imagem:'
+            var resultadoFinal = Text(componentesIniciais.first ?? "")
+            
+            // Percorre o resto dos blocos quebrados pela tag
+            for bloco in componentesIniciais.dropFirst() {
+                let partesDoBloco = bloco.components(separatedBy: tagFinal)
+                
+                if partesDoBloco.count >= 2 {
+                    let nomeImagem = partesDoBloco[0].trimmingCharacters(in: .whitespacesAndNewlines)
+                    let textoRestante = partesDoBloco[1]
+                    
+                    // Concatena a imagem encontrada + o texto que veio depois dela
+                    resultadoFinal = resultadoFinal + Text(Image(nomeImagem)) + Text(textoRestante)
+                } else {
+                    // Caso falte fechar o ']', reinsere o texto original do bloco truncado
+                    resultadoFinal = resultadoFinal + Text(tagInicial + bloco)
+                }
+            }
+            
+            return resultadoFinal
+        }
+        
+        // Se não tiver nenhuma tag de imagem, renderiza o texto puro
+        return Text(texto)
+    }
+}
+
 
 
 @Model

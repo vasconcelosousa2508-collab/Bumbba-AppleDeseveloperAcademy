@@ -59,8 +59,9 @@ struct FluxoHistoriaEAtividadeView: View {
                         if let idTrecho = linha.idTrecho,
                            let trecho = todosOsTrechos.first(where: { $0.id == idTrecho }) {
                             
-                            Text(trecho.texto)
-                                .font(.title2)
+                            // 🚀 ALTERAÇÃO AQUI: Trocado de 'Text(trecho.texto)' para 'trecho.textoFormatado'
+                            trecho.textoFormatado
+                                .font(FontesDoApp.x(tamanho: 25))
                                 .fontWeight(.regular)
                                 .padding(.vertical, 12)
                                 .frame(maxWidth: .infinity, alignment: .center)
@@ -156,7 +157,7 @@ struct FluxoHistoriaEAtividadeView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text(tituloDoLivro)
-                    .font(FontesDoApp.xBold(tamanho: 20))
+                    .font(FontesDoApp.xBold(tamanho: 25))
                     .foregroundColor(.roxoTab)
                     .padding(.top, 30)
             }
@@ -164,7 +165,6 @@ struct FluxoHistoriaEAtividadeView: View {
         .toolbar(.hidden, for: .tabBar)
     }
     
-    // Banners mantidos de forma idêntica...
     private var bannerSucesso: some View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {

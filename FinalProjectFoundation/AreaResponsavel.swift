@@ -196,6 +196,7 @@ struct AreaResponsavelView: View {
                 }
                 .padding(20)
             }
+            .toolbar(.hidden, for: .tabBar)
         }
     }
 }
