@@ -145,7 +145,6 @@ class Trecho: Identifiable {
 
 
 
-
 @Model
 @SQLiteTable("Atividade")
 class Atividade: Identifiable {

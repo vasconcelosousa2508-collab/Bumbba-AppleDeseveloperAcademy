@@ -18,8 +18,7 @@ struct MainView: View {
                 
                 Tab("Responsável", systemImage: "person.fill") {
                     ZStack {
-                        Color.fundo.ignoresSafeArea()
-                        Text("Acesso Responsável")
+                        InserirSenhaView()
                     }
                 }
             }
