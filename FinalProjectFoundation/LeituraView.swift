@@ -4,13 +4,15 @@ import SwiftDataSQLite
 
 struct FluxoHistoriaEAtividadeView: View {
     @Environment(\.dismiss) var dismiss
+    @Environment(\.modelContext) private var context // 🚀 1. Adicionado acesso ao Contexto do Banco
+    
     let idVersaoSelecionada: Int
     
     @Query(sort: \ConteudoLinha.ordemPosicao) var todasAsLinhas: [ConteudoLinha]
     @Query var todosOsTrechos: [Trecho]
     @Query var todasAtividades: [Atividade]
     @Query var todasMultiplaEscolhas: [AtividadeMultiplaEscolha]
-    @Query var todasDesembaralhar: [AtividadeDesembaralhar] // 🚀 Adicionado a Query da nova tabela
+    @Query var todasDesembaralhar: [AtividadeDesembaralhar]
     @Query var todasAsVersoes: [LivroVersaoNivel]
     @Query var todosOsLivros: [Livro]
     
@@ -31,12 +33,14 @@ struct FluxoHistoriaEAtividadeView: View {
         return idsAtividadesObrigatorias.allSatisfy { atividadesResolvidas[$0] == true }
     }
     
+    // 🚀 2. Propriedade auxiliar para encontrar o objeto real do Livro atual
+    var livroAtual: Livro? {
+        guard let versao = todasAsVersoes.first(where: { $0.id == idVersaoSelecionada }) else { return nil }
+        return todosOsLivros.first(where: { $0.id == versao.idLivro })
+    }
+    
     var tituloDoLivro: String {
-        guard let versao = todasAsVersoes.first(where: { $0.id == idVersaoSelecionada }),
-              let livro = todosOsLivros.first(where: { $0.id == versao.idLivro }) else {
-            return "Livro Desconhecido"
-        }
-        return livro.titulo
+        livroAtual?.titulo ?? "Livro Desconhecido"
     }
     
     var body: some View {
@@ -52,7 +56,6 @@ struct FluxoHistoriaEAtividadeView: View {
             } else {
                 List {
                     ForEach(linhasDaVersao) { linha in
-                        
                         if let idTrecho = linha.idTrecho,
                            let trecho = todosOsTrechos.first(where: { $0.id == idTrecho }) {
                             
@@ -69,7 +72,6 @@ struct FluxoHistoriaEAtividadeView: View {
                         else if let idAtividade = linha.idAtividade,
                                 let atividade = todasAtividades.first(where: { $0.id == idAtividade }) {
                             
-                            // 💡 INTEGRAÇÃO TIPO 1: Múltipla Escolha
                             if let multiplaEscolha = todasMultiplaEscolhas.first(where: { $0.idAtividade == atividade.id }) {
                                 ComponenteMultiplaEscolha(
                                     idAtividade: atividade.id,
@@ -93,7 +95,6 @@ struct FluxoHistoriaEAtividadeView: View {
                                 .listRowSeparator(.hidden)
                             }
                             
-                            // 💡 INTEGRAÇÃO TIPO 2: Desembaralhar (Frases ou Palavras)
                             else if let desembaralhar = todasDesembaralhar.first(where: { $0.idAtividade == atividade.id }) {
                                 ComponenteDesembaralhar(
                                     idAtividade: atividade.id,
@@ -119,8 +120,16 @@ struct FluxoHistoriaEAtividadeView: View {
                         }
                     }
                     
+                    // Botão de conclusão
                     Button(action: {
-                        if todasAtividadesConcluidas { dismiss() }
+                        if todasAtividadesConcluidas {
+                            // 🚀 3. Modifica o estado do livro para concluído (1) e salva no SQLite
+                            if let livro = livroAtual {
+                                livro.concluido = 1
+                                try? context.save()
+                            }
+                            dismiss()
+                        }
                     }) {
                         Text(todasAtividadesConcluidas ? "Concluir Jornada" : "Responda os desafios para concluir")
                             .font(FontesDoApp.x(tamanho: 16))
@@ -140,7 +149,6 @@ struct FluxoHistoriaEAtividadeView: View {
                 .disabled(mostrarBannerCorreto || mostrarBannerErrado)
             }
             
-            // Banners mantidos de forma idêntica
             if mostrarBannerCorreto { bannerSucesso }
             if mostrarBannerErrado { bannerErro }
         }
@@ -156,6 +164,7 @@ struct FluxoHistoriaEAtividadeView: View {
         .toolbar(.hidden, for: .tabBar)
     }
     
+    // Banners mantidos de forma idêntica...
     private var bannerSucesso: some View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {

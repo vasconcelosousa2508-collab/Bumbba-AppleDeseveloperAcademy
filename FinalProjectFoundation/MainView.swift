@@ -37,7 +37,8 @@ struct MainView: View {
                     Crianca.self, Responsavel.self, Avatar.self,
                     Livro.self, LivroVersaoNivel.self, ConteudoLinha.self,
                     Trecho.self, Atividade.self,
-                    AtividadeMultiplaEscolha.self // 💡 CRUCIAL: Faltava este modelo aqui para a Main carregar os cards!
+                    AtividadeMultiplaEscolha.self,
+                    AtividadeDesembaralhar.self
                 ],
                 inMemory: false,
                 sqliteDatabasePath: dbPath

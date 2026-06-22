@@ -72,10 +72,13 @@ class Livro: Identifiable {
     
     var capa: Data
     
-    init(id: Int, titulo: String, capa: Data) {
+    var concluido: Int
+    
+    init(id: Int, titulo: String, capa: Data, concluido: Int) {
         self.id = id
         self.titulo = titulo
         self.capa = capa
+        self.concluido = concluido
     }
 }
 
@@ -91,13 +94,10 @@ class LivroVersaoNivel: Identifiable {
     @SQLiteColumn("faixa_etaria")
     var faixaEtaria: String
     
-    var concluido: Int
-
-    init(id: Int, idLivro: Int, faixaEtaria: String, concluido: Int) {
+    init(id: Int, idLivro: Int, faixaEtaria: String) {
         self.id = id
         self.idLivro = idLivro
         self.faixaEtaria = faixaEtaria
-        self.concluido = concluido
     }
 }
 

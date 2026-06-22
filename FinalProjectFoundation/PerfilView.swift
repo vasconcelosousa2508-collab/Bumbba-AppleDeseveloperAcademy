@@ -1,11 +1,15 @@
 import SwiftUI
 import SwiftData
 import SwiftDataSQLite
+import SwiftUI
+import SwiftData
+import SwiftDataSQLite
 
 struct PerfilView: View {
     @Environment(\.modelContext) private var context
     @Query var criancas: [Crianca]
     @Query var avatares: [Avatar]
+    @Query var todosOsLivros: [Livro] // 🚀 Adicionado para buscar os livros do banco
     
     var idSelecionado: Int?
     
@@ -28,12 +32,13 @@ struct PerfilView: View {
     // Busca o avatar correspondente na memória
     var avatarAtual: Avatar? {
         guard let idAvatarDaCrianca = criancaAtual?.idAvatar else { return nil }
-        
-        // Conversão segura de Int/String caso seu banco SQLite use tipagem mista
         return avatares.first(where: { Int("\($0.id)") == Int("\(idAvatarDaCrianca)") })
     }
     
-    let historiasConcluidas = 6
+    // 🚀 Filtra dinamicamente os livros concluídos salvos no banco de dados
+    var livrosConcluidos: [Livro] {
+        todosOsLivros.filter { $0.concluido == 1 }
+    }
 
     var body: some View {
         let colunas = [
@@ -103,7 +108,8 @@ struct PerfilView: View {
                             .background(Color.roxoTab.opacity(0.2))
 
                         HStack {
-                            Text("Histórias Concluídas (\(historiasConcluidas))")
+                            // 🚀 Agora mostra a quantidade real de livros concluídos do array
+                            Text("Histórias Concluídas (\(livrosConcluidos.count))")
                                 .font(FontesDoApp.x(tamanho: 18))
                                 .foregroundColor(.roxoLetras.opacity(0.8))
                             Spacer()
@@ -114,23 +120,51 @@ struct PerfilView: View {
                     .padding(.vertical, 25)
                     .padding(.top, 40)
 
-                    // GRID DE LIVROS
-                    LazyVGrid(columns: colunas, spacing: 8) {
-                        ForEach(1...6, id: \.self) { livro in
-                            VStack(spacing: 0) {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.sombra)
-                                    .aspectRatio(1, contentMode: .fit)
-                                    .overlay(
-                                        Image(systemName: "book.closed.fill")
-                                            .font(.system(size: 38))
-                                            .foregroundColor(.roxoTab.opacity(0.6))
-                                    )
+                    // GRID DE LIVROS DINÂMICO
+                    if livrosConcluidos.isEmpty {
+                        ContentUnavailableView(
+                            "Nenhum livro concluído",
+                            systemImage: "book",
+                            description: Text("Complete as atividades para ver suas conquistas aqui!")
+                        )
+                        .padding(.top, 20)
+                    } else {
+                        LazyVGrid(columns: colunas, spacing: 8) {
+                            ForEach(livrosConcluidos) { livro in
+                                VStack(spacing: 4) {
+                                    // Renderiza a imagem real da capa guardada como Data no Banco
+                                    if let uiImage = UIImage(data: livro.capa) {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(maxWidth: .infinity)
+                                            .aspectRatio(1, contentMode: .fit)
+                                            .cornerRadius(12)
+                                    } else {
+                                        // Fallback caso a imagem dê falha de conversão
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.sombra)
+                                            .aspectRatio(1, contentMode: .fit)
+                                            .overlay(
+                                                Image(systemName: "book.closed.fill")
+                                                    .font(.system(size: 38))
+                                                    .foregroundColor(.roxoTab.opacity(0.6))
+                                            )
+                                    }
+                                    
+                                    // Nome do Livro embaixo da imagem
+                                    Text(livro.titulo)
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.roxoLetras)
+                                        .lineLimit(1)
+                                        .padding(.top, 4)
+                                }
+                                .padding(8)
+                                .background(Color.fundo)
+                                .cornerRadius(12)
+                                .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
                             }
-                            .padding(8)
-                            .background(Color.fundo)
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
                         }
                     }
                 }
@@ -142,15 +176,112 @@ struct PerfilView: View {
     }
 }
 
+
+
+struct SelectAvatarView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var context
+    
+    @Query var avatares: [Avatar]
+    
+    var crianca: Crianca // Recebe a instância da criança da tela anterior
+    @State private var avatarSelecionado: Avatar?
+    
+    let colunas = [
+        GridItem(.flexible(), spacing: 16),
+        GridItem(.flexible(), spacing: 16)
+    ]
+    
+    var body: some View {
+        ZStack {
+            Color.fundo.ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // 1. Área de Rolagem dos Avatares
+                ScrollView {
+                    LazyVGrid(columns: colunas, spacing: 25) {
+                        ForEach(avatares) { avatar in
+                            Button(action: {
+                                avatarSelecionado = avatar
+                            }) {
+                                VStack(spacing: 0) {
+                                    if let uiImage = UIImage(data: avatar.imagem) {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 160, height: 160)
+                                            .clipShape(Circle())
+                                    } else {
+                                        Image(systemName: "person.circle.fill")
+                                            .resizable()
+                                            .frame(width: 160, height: 160)
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                            }
+                            .padding(8)
+                            // Alinha os IDs para inteiros caso o banco use formato misto
+                            .background(Int("\(avatarSelecionado?.id ?? -1)") == Int("\(avatar.id)") ? Color.roxoTab.opacity(0.2) : Color.clear)
+                            .cornerRadius(12)
+                            .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
+                        }
+                    }
+                    .padding()
+                }
+                
+                // 2. Área Fixa do Botão de Confirmação
+                VStack {
+                    Button(action: {
+                        if let novoAvatar = avatarSelecionado {
+                            // ATUALIZAÇÃO NO SWIFTDATA: Atribui o novo ID de avatar à criança
+                            // Adapte o tipo (ex: String(novoAvatar.id) ou Int(novoAvatar.id)) conforme seu model real exige
+                            crianca.idAvatar = novoAvatar.id
+                            
+                            // Força a gravação imediata no SQLite
+                            try? context.save()
+                        }
+                        dismiss() // Fecha e volta atualizado automaticamente
+                    }) {
+                        HStack(spacing: 10) {
+                            Text("Confirmar")
+                                .font(FontesDoApp.x(tamanho: 16))
+                        }
+                        .foregroundColor(.white)
+                        .frame(width: 320, height: 50)
+                        .background(Color.roxoTab)
+                        .cornerRadius(100)
+                        .opacity(avatarSelecionado == nil ? 0.5 : 1.0)
+                    }
+                    .disabled(avatarSelecionado == nil)
+                    .padding(.top, 15)
+                    .padding(.bottom, 10)
+                }
+                .frame(maxWidth: .infinity)
+                .background(Color.fundo)
+            }
+        }
+        .onAppear {
+            // Inicializa a seleção visual com o avatar que a criança já usa hoje
+            avatarSelecionado = avatares.first(where: { Int("\($0.id)") == Int("\(crianca.idAvatar)") })
+        }
+    }
+}
+
+
+
+// MARK: - Preview Oficial Atualizado
 #Preview {
     if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
         PerfilView(idSelecionado: 1)
             .modelContainer(
-                for: [Crianca.self, Avatar.self],
-                inMemory: false, // Alterado para ler do banco real do Bundle
+                // 🚀 Incluído Livro.self também no container do preview
+                for: [Crianca.self, Avatar.self, Livro.self],
+                inMemory: false,
                 sqliteDatabasePath: dbPath
             )
     } else {
         ContentUnavailableView("Banco db.sqlite não encontrado", systemImage: "exclamationmark.triangle")
     }
 }
+
+
