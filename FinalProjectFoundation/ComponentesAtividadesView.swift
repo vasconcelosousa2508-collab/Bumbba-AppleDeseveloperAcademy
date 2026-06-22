@@ -120,6 +120,7 @@ extension Collection {
 struct BlocoElemento: Identifiable, Equatable {
     let id = UUID()
     let texto: String
+    let cor: Color // 🚀 Nova propriedade para fixar a cor sorteada
 }
 
 struct ComponenteDesembaralhar: View {
@@ -169,10 +170,11 @@ struct ComponenteDesembaralhar: View {
                                 Text(bloco.texto)
                                     .font(.body)
                                     .fontWeight(.bold)
-                                    .foregroundColor(.white)
+                                    // 🚀 Texto preto/primary se a cor for clara, ou branco se for o roxoTab
+                                    .foregroundColor((bloco.cor == .laranjaClaro || bloco.cor == .roxoTab) ? .white : .black)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
-                                    .background(Color.roxoTab)
+                                    .background(bloco.cor) // 🚀 Aplica a cor sorteada e mantida pelo bloco
                                     .cornerRadius(8)
                             }
                             .buttonStyle(.plain)
@@ -202,12 +204,12 @@ struct ComponenteDesembaralhar: View {
                     }) {
                         Text(bloco.texto)
                             .font(.body)
-                            .fontWeight(.medium)
-                            .foregroundColor(.primary)
+                            .fontWeight(.bold) // Mudei para bold para destacar mais nas cores claras
+                            .foregroundColor((bloco.cor == .laranjaClaro || bloco.cor == .roxoTab) ? .white : .black)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
                             .frame(minWidth: 60)
-                            .background(Color.sombra.opacity(0.4))
+                            .background(bloco.cor) // 🚀 Aplica a cor sorteada aqui também
                             .cornerRadius(8)
                             .shadow(color: Color.black.opacity(0.05), radius: 2, y: 1)
                     }
@@ -257,7 +259,16 @@ struct ComponenteDesembaralhar: View {
     
     private func inicializarComponente() {
         let listaOriginal = dadosDesembaralhar.listaDeElementos
-        let blocosMapeados = listaOriginal.map { BlocoElemento(texto: $0) }
+        
+        // 🚀 Lista das cores disponíveis no seu Assets
+        let coresDisponiveis: [Color] = [.verdeClaro, .azulClaro, .amareloClaro, .laranjaClaro, .roxoTab]
+        
+        let blocosMapeados = listaOriginal.map { elemento in
+            // Sorteia uma cor da lista (usa .roxoTab como fallback seguro)
+            let corSorteada = coresDisponiveis.randomElement() ?? .roxoTab
+            return BlocoElemento(texto: elemento, cor: corSorteada)
+        }
+        
         // Força o embaralhamento dos blocos ao carregar na tela
         self.elementosDisponiveis = blocosMapeados.shuffled()
     }
