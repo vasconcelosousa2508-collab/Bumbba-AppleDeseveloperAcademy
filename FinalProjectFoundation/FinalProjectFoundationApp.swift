@@ -21,7 +21,7 @@ struct FinalProjectFoundationApp: App {
                     ],
                     // 💡 IMPORTANTE: Mude de 'true' para 'false'.
                     // Se deixar 'true' (inMemory), ele ignora o seu arquivo SQLite e cria um banco limpo toda vez.
-                    inMemory: false,
+                    inMemory: true,
                     sqliteDatabasePath: Bundle.main.path(forResource: "db", ofType: "sqlite")!
                 )
         }

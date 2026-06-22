@@ -208,7 +208,7 @@ struct FluxoHistoriaEAtividadeView: View {
                             Trecho.self, Atividade.self, AtividadeMultiplaEscolha.self,
                             AtividadeDesembaralhar.self // 🚀 Nova tabela incluída também para o Preview funcionar localmente
                         ],
-                        inMemory: true,
+                        inMemory: false,
                         sqliteDatabasePath: dbPath
                     )
             }
