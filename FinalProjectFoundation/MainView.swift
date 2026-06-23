@@ -39,7 +39,7 @@ struct MainView: View {
                     AtividadeMultiplaEscolha.self,
                     AtividadeDesembaralhar.self
                 ],
-                inMemory: false,
+                inMemory: true,
                 sqliteDatabasePath: dbPath
             )
     } else {

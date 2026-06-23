@@ -5,6 +5,7 @@
 //  Created by Found on 22/06/26.
 //
 
+
 import SwiftUI
 import SwiftData
 import SwiftDataSQLite
@@ -75,7 +76,7 @@ struct InserirSenhaView: View {
                     
                     Spacer()
                     
-                    // 🚀 Botão que valida e ativa a navegação apenas se estiver correto
+                    // 🚀 Botão que valida e abraça a navegação apenas se estiver correto
                     Button(action: {
                         if texto == senha_correta {
                             senhaIncorreta = false
@@ -106,7 +107,6 @@ struct InserirSenhaView: View {
 }
 
 
-
 struct AreaResponsavelView: View {
     @Environment(\.modelContext) private var context
     @Query var criancas: [Crianca]
@@ -114,7 +114,7 @@ struct AreaResponsavelView: View {
     @Query var avatares: [Avatar]
     
     var body: some View {
-        NavigationStack { // 🚀 Adicionado para gerenciar a ida para a edição
+        NavigationStack { // Gerencia a ida para a edição e cadastro
             ZStack {
                 Color.fundo.ignoresSafeArea()
                 
@@ -124,7 +124,8 @@ struct AreaResponsavelView: View {
                         .font(FontesDoApp.xBold(tamanho: 28))
                         .foregroundColor(.roxoTab)
                         .padding(.horizontal)
-                        .padding(30)
+                        .padding(.top, 30)
+                        .padding(.bottom, 10)
                     
                     if criancas.isEmpty {
                         VStack {
@@ -141,7 +142,7 @@ struct AreaResponsavelView: View {
                             LazyVStack(spacing: 16) {
                                 ForEach(criancas) { crianca in
                                     
-                                    // 🚀 Transforma o card inteiro em um botão de navegação
+                                    // Transforma o card inteiro em um botão de navegação
                                     NavigationLink(destination: EditarCriancaView(crianca: crianca)) {
                                         HStack(spacing: 16) {
                                             
@@ -167,7 +168,7 @@ struct AreaResponsavelView: View {
                                                 Text(crianca.nome)
                                                     .font(FontesDoApp.xBold(tamanho: 20))
                                                     .foregroundColor(.primary)
-                                                
+                                                  
                                                 Text("\(crianca.idade) anos")
                                                     .font(FontesDoApp.x(tamanho: 16))
                                                     .foregroundColor(.secondary)
@@ -187,20 +188,32 @@ struct AreaResponsavelView: View {
                                         )
                                         .padding(.horizontal)
                                     }
-                                    .buttonStyle(PlainButtonStyle()) // Mantém o visual do card sem o azul padrão de link
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                             .padding(.top, 10)
                         }
                     }
                 }
-                .padding(20)
+                .padding(.bottom, 20)
             }
             .toolbar(.hidden, for: .tabBar)
+            // 🚀 CORRIGIDO: Botão de adicionar com ação vazia segura que não quebra o compilador
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        // Ação vazia (não faz nada)
+                    }) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.roxoTab)
+                    }
+                    .padding(.trailing, 10)
+                }
+            }
         }
     }
 }
-
 
 struct EditarCriancaView: View {
     @Environment(\.modelContext) private var context
@@ -290,9 +303,6 @@ struct EditarCriancaView: View {
 }
 
 
-
-
-
 #Preview {
     if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
         InserirSenhaView()
@@ -311,5 +321,3 @@ struct EditarCriancaView: View {
         ContentUnavailableView("Banco db.sqlite não encontrado no Bundle", systemImage: "exclamationmark.triangle")
     }
 }
-
-

@@ -200,7 +200,7 @@ struct FluxoHistoriaEAtividadeView: View {
     ZStack {
         if let dbPath = Bundle.main.path(forResource: "db", ofType: "sqlite") {
             NavigationStack {
-                FluxoHistoriaEAtividadeView(idVersaoSelecionada: 101)
+                FluxoHistoriaEAtividadeView(idVersaoSelecionada: 102)
                     .modelContainer(
                         for: [
                             Responsavel.self, Crianca.self, Avatar.self,
@@ -208,7 +208,7 @@ struct FluxoHistoriaEAtividadeView: View {
                             Trecho.self, Atividade.self, AtividadeMultiplaEscolha.self,
                             AtividadeDesembaralhar.self // 🚀 Nova tabela incluída também para o Preview funcionar localmente
                         ],
-                        inMemory: false,
+                        inMemory: true,
                         sqliteDatabasePath: dbPath
                     )
             }
