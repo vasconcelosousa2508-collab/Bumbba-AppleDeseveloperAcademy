@@ -1,41 +1,38 @@
 import SwiftUI
 import SwiftData
 import SwiftDataSQLite
-import SwiftUI
-import SwiftData
-import SwiftDataSQLite
 
 struct PerfilView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.perfilAtivo) private var perfilAtivo
+    // 🚀 Pegamos a criança ativa direto do Environment injetado pela MainView
+    @Environment(\.criancaAtiva) private var criancaAtivaEnvironment
+    
+    // 🔎 Buscamos a lista global (sem filtros rígidos no init para não travar a View)
     @Query var criancas: [Crianca]
     @Query var avatares: [Avatar]
-    @Query var todosOsLivros: [Livro] // 🚀 Adicionado para buscar os livros do banco
+    @Query var todosOsLivros: [Livro]
     
     var idSelecionado: Int?
     
-    // Inicializador mantém o filtro pelo ID
+    // Simplificamos o init para evitar que o SwiftData trave o estado inicial da Query
     init(idSelecionado: Int? = nil) {
         self.idSelecionado = idSelecionado
-        
-        if let idFiltro = idSelecionado {
-            self._criancas = Query(filter: #Predicate<Crianca> { $0.id == idFiltro })
-        } else {
-            self._criancas = Query()
-        }
     }
     
-    // Captura a criança encontrada pelo filtro
+    // 🔄 Descobre dinamicamente qual criança exibir (seja por ID fixo ou pelo Environment atual)
     var criancaAtual: Crianca? {
-        criancas.first
+        if let idFiltro = idSelecionado {
+            return criancas.first(where: { $0.id == idFiltro })
+        }
+        return criancaAtivaEnvironment
     }
     
-    // Busca o avatar correspondente na memória
     var avatarAtual: Avatar? {
         guard let idAvatarDaCrianca = criancaAtual?.idAvatar else { return nil }
         return avatares.first(where: { Int("\($0.id)") == Int("\(idAvatarDaCrianca)") })
     }
     
-    // 🚀 Filtra dinamicamente os livros concluídos salvos no banco de dados
     var livrosConcluidos: [Livro] {
         todosOsLivros.filter { $0.concluido == 1 }
     }
@@ -70,7 +67,6 @@ struct PerfilView: View {
                                         .foregroundColor(.gray)
                                 }
                                 
-                                // Botão de Lápis posicionado por cima com NavigationLink enviando a criança
                                 NavigationLink(destination: SelectAvatarView(crianca: crianca)) {
                                     Circle()
                                         .fill(Color.azulClaro)
@@ -85,7 +81,7 @@ struct PerfilView: View {
                             }
                             
                             // MARK: - Informações da Criança
-                            VStack(spacing: 8) {
+                            VStack(spacing: 12) {
                                 Text(crianca.nome)
                                     .font(FontesDoApp.xBold(tamanho: 32))
                                     .foregroundColor(.roxoTab)
@@ -93,6 +89,24 @@ struct PerfilView: View {
                                 Text("\(crianca.idade) anos")
                                     .font(.title3)
                                     .foregroundColor(.secondary)
+                                
+                                // Botão de Trocar Perfil funcionando perfeitamente
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.3)) {
+                                        perfilAtivo.wrappedValue = nil
+                                    }
+                                }) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "arrow.left.arrow.right.circle")
+                                        Text("Trocar de Perfil")
+                                    }
+                                    .font(FontesDoApp.xBold(tamanho: 14))
+                                    .foregroundColor(.roxoTab)
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 16)
+                                    .background(Capsule().fill(Color.roxoTab.opacity(0.1)))
+                                }
+                                .padding(.top, 4)
                             }
                             
                         } else {
@@ -108,7 +122,6 @@ struct PerfilView: View {
                             .background(Color.roxoTab.opacity(0.2))
 
                         HStack {
-                            // 🚀 Agora mostra a quantidade real de livros concluídos do array
                             Text("Histórias Concluídas (\(livrosConcluidos.count))")
                                 .font(FontesDoApp.x(tamanho: 18))
                                 .foregroundColor(.roxoLetras.opacity(0.8))
@@ -118,7 +131,7 @@ struct PerfilView: View {
                     }
                     .padding(.horizontal, 15)
                     .padding(.vertical, 25)
-                    .padding(.top, 40)
+                    .padding(.top, 20)
 
                     // GRID DE LIVROS DINÂMICO
                     if livrosConcluidos.isEmpty {
@@ -132,7 +145,6 @@ struct PerfilView: View {
                         LazyVGrid(columns: colunas, spacing: 8) {
                             ForEach(livrosConcluidos) { livro in
                                 VStack(spacing: 4) {
-                                    // Renderiza a imagem real da capa guardada como Data no Banco
                                     if let uiImage = UIImage(data: livro.capa) {
                                         Image(uiImage: uiImage)
                                             .resizable()
@@ -141,7 +153,6 @@ struct PerfilView: View {
                                             .aspectRatio(1, contentMode: .fit)
                                             .cornerRadius(12)
                                     } else {
-                                        // Fallback caso a imagem dê falha de conversão
                                         RoundedRectangle(cornerRadius: 12)
                                             .fill(Color.sombra)
                                             .aspectRatio(1, contentMode: .fit)
@@ -152,7 +163,6 @@ struct PerfilView: View {
                                             )
                                     }
                                     
-                                    // Nome do Livro embaixo da imagem
                                     Text(livro.titulo)
                                         .font(.caption)
                                         .fontWeight(.bold)
